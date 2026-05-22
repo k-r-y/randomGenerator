@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import type { Choice } from '../types';
 import { soundManager } from '../utils/soundUtils';
-import { Play, Volume2, VolumeX } from 'lucide-react';
+import { Play } from 'lucide-react';
 
 interface PlinkoProps {
   choices: Choice[];
@@ -42,15 +42,12 @@ const getRandomDropProps = (boardWidth: number) => {
 export const Plinko: React.FC<PlinkoProps> = ({ choices, onWinner, isFullscreen, isLightMode }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [ballActive, setBallActive] = useState(false);
-  const [muted, setMuted] = useState(soundManager.isMuted());
   
-  // Store isLightMode in a ref so active physics loops can read the latest theme without stale closures
   const isLightModeRef = useRef(isLightMode);
   useEffect(() => {
     isLightModeRef.current = isLightMode;
   }, [isLightMode]);
   
-  // Keep game properties in refs to run inside requestAnimationFrame loop
   const ballRef = useRef<Ball>({ x: 0, y: 0, vx: 0, vy: 0, radius: 8, color: '#f59e0b', active: false });
   const pegsRef = useRef<Peg[]>([]);
   const binsRef = useRef<BinBoundary[]>([]);
@@ -58,11 +55,6 @@ export const Plinko: React.FC<PlinkoProps> = ({ choices, onWinner, isFullscreen,
 
   const boardWidth = 460;
   const boardHeight = 520;
-
-  const toggleMute = () => {
-    const newMuted = soundManager.toggleMute();
-    setMuted(newMuted);
-  };
 
 
 
@@ -243,7 +235,7 @@ export const Plinko: React.FC<PlinkoProps> = ({ choices, onWinner, isFullscreen,
       const binWidth = bin.xEnd - bin.xStart;
       
       // Calculate dynamic font size based on slot width (wider bins get much larger names!)
-      const fontSize = Math.max(13, Math.min(18, Math.floor(binWidth * 0.15)));
+      const fontSize = Math.max(18, Math.min(28, Math.floor(binWidth * 0.22)));
       
       ctx.fillStyle = isLight ? '#1e293b' : '#ffffff';
       ctx.font = `bold ${fontSize}px Outfit`;
@@ -389,12 +381,6 @@ export const Plinko: React.FC<PlinkoProps> = ({ choices, onWinner, isFullscreen,
           </span>
           <h3 className="text-lg font-bold text-white leading-none mt-0.5">Plinko Bouncer</h3>
         </div>
-        <button
-          onClick={toggleMute}
-          className="p-2 rounded-xl bg-[#2c2c2e]/60 border border-white/5 hover:bg-[#2c2c2e]/90 text-slate-400 hover:text-white transition-all mac-btn cursor-pointer"
-        >
-          {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-        </button>
       </div>
 
       {/* Board Window Container */}
@@ -404,7 +390,7 @@ export const Plinko: React.FC<PlinkoProps> = ({ choices, onWinner, isFullscreen,
         <canvas
           ref={canvasRef}
           className="bg-transparent block"
-          style={{ width: `${boardWidth}px`, height: `${boardHeight}px` }}
+          style={isFullscreen ? { width: `${boardWidth}px`, height: `${boardHeight}px` } : { width: '360px', height: '410px' }}
         />
 
         {/* Empty warning overlay */}

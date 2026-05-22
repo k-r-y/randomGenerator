@@ -109,25 +109,37 @@ function App() {
     <div 
       className={`flex flex-col items-center justify-center transition-all duration-300 ${
         isFullscreen 
-          ? 'fixed inset-0 z-[9999] bg-[#09090b] p-8 overflow-y-auto w-screen h-screen' 
-          : 'flex-1 min-h-[380px] glass-panel rounded-3xl relative mac-shadow w-full'
+          ? 'fixed inset-0 z-[9999] bg-[#00000] p-8 overflow-y-auto w-screen h-screen game-fullscreen-panel' 
+          : 'w-full glass-panel rounded-3xl relative mac-shadow'
       }`}
     >
-      {/* Fullscreen Close/Maximize Button */}
-      <button
-        onClick={() => {
-          setIsFullscreen(!isFullscreen);
-          soundManager.playTick(600, 0.08);
-          // Dispatch resize event to trigger canvas resizing
-          setTimeout(() => {
-            window.dispatchEvent(new Event('resize'));
-          }, 50);
-        }}
-        className="absolute top-4 right-4 z-[10000] p-2.5 rounded-xl bg-[#2c2c2e]/60 border border-white/5 hover:bg-[#2c2c2e]/90 text-slate-400 hover:text-white transition-all mac-btn cursor-pointer shadow-md"
-        title={isFullscreen ? "Exit Full Screen" : "Full Screen"}
-      >
-        {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-      </button>
+      {/* Unified Controls Container */}
+      <div className="absolute top-4 right-4 z-[10000] flex items-center gap-2">
+        {/* Unified Sound Toggle */}
+        <button
+          onClick={toggleMute}
+          className="p-2.5 rounded-xl bg-[#2c2c2e]/60 border border-white/5 hover:bg-[#2c2c2e]/90 text-slate-400 hover:text-white transition-all mac-btn cursor-pointer shadow-md"
+          title={muted ? "Unmute sounds" : "Mute sounds"}
+        >
+          {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+        </button>
+
+        {/* Fullscreen Button */}
+        <button
+          onClick={() => {
+            setIsFullscreen(!isFullscreen);
+            soundManager.playTick(600, 0.08);
+            // Dispatch resize event to trigger canvas resizing
+            setTimeout(() => {
+              window.dispatchEvent(new Event('resize'));
+            }, 50);
+          }}
+          className="p-2.5 rounded-xl bg-[#2c2c2e]/60 border border-white/5 hover:bg-[#2c2c2e]/90 text-slate-400 hover:text-white transition-all mac-btn cursor-pointer shadow-md"
+          title={isFullscreen ? "Exit Full Screen" : "Full Screen"}
+        >
+          {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+        </button>
+      </div>
 
       <div className="w-full flex-1 flex items-center justify-center overflow-visible">
         {activeTab === 'roulette' && (
@@ -231,7 +243,7 @@ function App() {
         <main className="flex-1 flex flex-col p-6 min-h-0 overflow-y-auto gap-6 bg-[#000000]/10">
           
           {/* Tab Selection Row */}
-          <div className="segmented-control p-1 flex items-center gap-0.5 overflow-x-auto w-full max-w-2xl shrink-0 border border-white/5">
+          <div className="segmented-control p-1 flex items-center gap-0.5 overflow-x-auto w-full shrink-0 border border-white/5">
             {[
               { id: 'roulette', label: 'Roulette', icon: Compass, color: 'text-purple-400' },
               { id: 'duck', label: 'Duck Race', icon: Waves, color: 'text-cyan-400' },
@@ -261,21 +273,28 @@ function App() {
             })}
           </div>
 
-          {/* Generator Core Game Board Display Area */}
-          {isFullscreen ? (
-            <>
-              {/* Responsive Glassmorphic Dashboard Placeholder */}
-              <div className="flex-1 min-h-[380px] glass-panel rounded-3xl relative mac-shadow w-full flex items-center justify-center text-slate-500">
-                <span className="text-xs font-semibold uppercase tracking-wider animate-pulse text-slate-400">Running in full screen...</span>
-              </div>
-              {createPortal(gameBoardContent, document.body)}
-            </>
-          ) : (
-            gameBoardContent
-          )}
+          {/* Generator Core Game Board & Logs Panel Stack Area */}
+          <div className="flex-1 flex flex-col items-center gap-6 w-full min-h-0">
+            {/* Center Column: Game board view viewport */}
+            <div className="w-full min-h-[520px] flex flex-col shrink-0">
+              {isFullscreen ? (
+                <>
+                  {/* Responsive Glassmorphic Dashboard Placeholder */}
+                  <div className="w-full h-full glass-panel rounded-3xl relative mac-shadow flex items-center justify-center text-slate-500">
+                    <span className="text-xs font-semibold uppercase tracking-wider animate-pulse text-slate-400">Running in full screen...</span>
+                  </div>
+                  {createPortal(gameBoardContent, document.body)}
+                </>
+              ) : (
+                gameBoardContent
+              )}
+            </div>
 
-          {/* History Panel */}
-          <HistoryPanel history={history} clearHistory={clearHistory} />
+            {/* History panel logs directly below the game */}
+            <div className="w-full shrink-0 pb-6">
+              <HistoryPanel history={history} clearHistory={clearHistory} />
+            </div>
+          </div>
 
         </main>
       </div>

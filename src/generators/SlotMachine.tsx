@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Choice } from '../types';
 import { soundManager } from '../utils/soundUtils';
-import { Volume2, VolumeX } from 'lucide-react';
+
 
 interface SlotMachineProps {
   choices: Choice[];
@@ -19,7 +19,6 @@ interface ReelState {
 export const SlotMachine: React.FC<SlotMachineProps> = ({ choices, onWinner, isFullscreen }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [handlePulled, setHandlePulled] = useState(false);
-  const [muted, setMuted] = useState(soundManager.isMuted());
 
   // Define states for 3 Reels
   const [reels, setReels] = useState<ReelState[]>(() => [
@@ -41,12 +40,9 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({ choices, onWinner, isF
   }
 
   const animationFrameRef = useRef<number | null>(null);
-  const reelItemsHeight = 80; // height of each option card in pixels
+  const reelItemsHeight = 100; // height of each option card in pixels
 
-  const toggleMute = () => {
-    const newMuted = soundManager.toggleMute();
-    setMuted(newMuted);
-  };
+
 
   // Get random choice based on weights
   const getWeightedRandom = (): Choice => {
@@ -186,12 +182,6 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({ choices, onWinner, isF
           </span>
           <h3 className="text-lg font-bold text-white leading-none mt-0.5">Sleek Slot Machine</h3>
         </div>
-        <button
-          onClick={toggleMute}
-          className="p-2 rounded-xl bg-[#2c2c2e]/60 border border-white/5 hover:bg-[#2c2c2e]/90 text-slate-400 hover:text-white transition-all mac-btn cursor-pointer"
-        >
-          {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-        </button>
       </div>
 
       {/* Main Arcade Cabinet Wrapper */}
@@ -214,9 +204,9 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({ choices, onWinner, isF
           </div>
 
           {/* Reels Panel Window */}
-          <div className="relative grid grid-cols-3 gap-2 bg-black/60 p-2.5 border border-white/5 rounded-2xl h-[240px] overflow-hidden shadow-inner">
+          <div className="relative grid grid-cols-3 gap-2 bg-black/60 p-2.5 border border-white/5 rounded-2xl h-[300px] overflow-hidden shadow-inner">
             {/* Center winning highlight frame indicator overlay */}
-            <div className="absolute inset-y-1/2 -translate-y-1/2 inset-x-0 h-[84px] border-y border-white/10 bg-white/[0.04] pointer-events-none z-10" />
+            <div className="absolute inset-y-1/2 -translate-y-1/2 inset-x-0 h-[104px] border-y border-white/10 bg-white/[0.04] pointer-events-none z-10" />
 
             {reels.map((reel, reelIdx) => (
               <div 
@@ -239,15 +229,15 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({ choices, onWinner, isF
                     reel.items.map((choice, choiceIdx) => (
                       <div 
                         key={choiceIdx}
-                        className="h-[80px] w-full shrink-0 flex flex-col items-center justify-center p-2 text-center select-none"
+                        className="h-[100px] w-full shrink-0 flex flex-col items-center justify-center p-2 text-center select-none"
                       >
                         <div 
-                          className="w-13 h-13 rounded-2xl flex items-center justify-center text-white text-base font-extrabold shadow-md transition-transform hover:scale-105"
+                          className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-xl font-extrabold shadow-md transition-transform hover:scale-105"
                           style={{ backgroundColor: choice.color }}
                         >
                           {choice.text.substring(0, 2).toUpperCase()}
                         </div>
-                        <span className="text-sm font-extrabold text-white truncate w-full mt-1.5 px-0.5 text-center leading-tight">
+                        <span className="text-xl font-extrabold text-white truncate w-full mt-1.5 px-0.5 text-center leading-tight">
                           {choice.text}
                         </span>
                       </div>

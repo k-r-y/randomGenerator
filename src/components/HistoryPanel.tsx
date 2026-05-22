@@ -14,7 +14,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({ history, clearHistor
   };
 
   return (
-    <div className="glass-panel rounded-2xl border border-slate-800/80 w-full overflow-hidden flex flex-col max-h-[300px]">
+    <div className="glass-panel rounded-2xl border border-slate-800/80 w-full overflow-hidden flex flex-col max-h-[220px]">
       {/* Header */}
       <div className="p-4 border-b border-slate-800/50 flex justify-between items-center bg-slate-950/20">
         <h3 className="text-sm font-bold text-white flex items-center gap-2">

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import type { Choice } from '../types';
 import { soundManager } from '../utils/soundUtils';
-import { Volume2, VolumeX, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface ClawMachineProps {
   choices: Choice[];
@@ -19,18 +19,32 @@ interface ToyCapsule {
 
 const createCapsules = (choices: Choice[], cabinetWidth: number): ToyCapsule[] => {
   if (choices.length === 0) return [];
+  
+  // We want a beautiful, stacked, natural-looking toy pile
+  // The play area is between minX=100 and maxX=340
+  const minX = 100;
+  const maxX = cabinetWidth - 45;
+  const usableWidth = maxX - minX;
+  
   return choices.map((choice, index) => {
-    const minX = 110;
-    const maxX = cabinetWidth - 50;
-    const step = choices.length > 1 ? (maxX - minX) / (choices.length - 1) : 0;
+    // Calculate row and column positions
+    const capsulesPerRow = 6;
+    const row = Math.floor(index / capsulesPerRow);
+    const col = index % capsulesPerRow;
     
-    const x = minX + index * step + (Math.random() - 0.5) * 12;
-    const y = 335 - (index % 2 === 0 ? 10 : 0) + (Math.random() - 0.5) * 6;
+    // Stagger columns slightly on odd rows to nestle them in the gaps
+    const stagger = (row % 2 === 0) ? 0 : (usableWidth / capsulesPerRow) / 2;
+    
+    // Base x position plus random organic offset
+    const x = minX + (col * (usableWidth / capsulesPerRow)) + stagger + (Math.random() - 0.5) * 8;
+    
+    // Base y stack level (from bottom y=242 up) plus random organic bounce offset
+    const y = 242 - (row * 24) + (Math.random() - 0.5) * 4;
 
     return {
       id: Math.random().toString(36).substring(2, 9),
       choice,
-      x,
+      x: Math.max(minX, Math.min(maxX, x)),
       y,
       color: choice.color,
     };
@@ -39,7 +53,6 @@ const createCapsules = (choices: Choice[], cabinetWidth: number): ToyCapsule[] =
 
 export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isFullscreen }) => {
   const [active, setActive] = useState(false);
-  const [muted, setMuted] = useState(soundManager.isMuted());
   const [statusText, setStatusText] = useState('INSERT COIN');
   const [capsules, setCapsules] = useState<ToyCapsule[]>(() => createCapsules(choices, 380));
   const [prevChoices, setPrevChoices] = useState(choices);
@@ -60,11 +73,6 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
 
   const cabinetWidth = 380;
   const prizeChuteX = 50; // chute is at the far left
-
-  const toggleMute = () => {
-    const newMuted = soundManager.toggleMute();
-    setMuted(newMuted);
-  };
 
   // Generate capsule positions resting at the bottom
   const initCapsules = () => {
@@ -234,12 +242,6 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
           </span>
           <h3 className="text-lg font-bold text-white leading-none mt-0.5">Claw Machine</h3>
         </div>
-        <button
-          onClick={toggleMute}
-          className="p-2 rounded-xl bg-slate-900/60 border border-slate-800/40 hover:bg-slate-900 text-slate-400 hover:text-white transition-colors"
-        >
-          {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-        </button>
       </div>
 
       {/* Main Claw cabinet graphic structure */}

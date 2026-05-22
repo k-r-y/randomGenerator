@@ -346,6 +346,10 @@ export const ChoiceSidebar: React.FC<ChoiceSidebarProps> = ({
             <div 
               key={choice.id}
               className="group flex flex-col gap-2 p-3 bg-[#1c1c1e]/40 hover:bg-[#1c1c1e]/70 rounded-xl border border-white/5 hover:border-white/10 transition-all duration-200 shadow-sm"
+              style={{ 
+                '--choice-color': choice.color, 
+                '--choice-color-glow': `${choice.color}1a` 
+              } as React.CSSProperties}
             >
               <div className="flex items-center gap-3">
                 {/* Visual Color Dot Picker */}

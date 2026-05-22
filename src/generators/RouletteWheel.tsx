@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import type { Choice } from '../types';
 import { soundManager } from '../utils/soundUtils';
-import { Play, Volume2, VolumeX } from 'lucide-react';
+import { Play } from 'lucide-react';
 
 interface RouletteWheelProps {
   choices: Choice[];
@@ -13,7 +13,6 @@ interface RouletteWheelProps {
 export const RouletteWheel: React.FC<RouletteWheelProps> = ({ choices, onWinner, isFullscreen, isLightMode }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [muted, setMuted] = useState(soundManager.isMuted());
 
   // Animation state values stored in refs to prevent unnecessary re-renders in raf
   const stateRef = useRef({
@@ -22,11 +21,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({ choices, onWinner,
     isSpinning: false,
     lastTickIndex: -1,
   });
-
-  const toggleMute = () => {
-    const newMuted = soundManager.toggleMute();
-    setMuted(newMuted);
-  };
 
   // Draw the wheel onto the canvas
   const drawWheel = useCallback((angle: number) => {
@@ -94,11 +88,11 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({ choices, onWinner,
       ctx.fillStyle = '#ffffff';
       
       // Calculate a highly-visible dynamic font size based on radius & number of choices
-      let fontSize = Math.max(18, Math.floor(radius * 0.085));
+      let fontSize = Math.max(28, Math.floor(radius * 0.12));
       if (choices.length > 8) {
-        fontSize = Math.max(14, Math.floor(radius * 0.06));
+        fontSize = Math.max(18, Math.floor(radius * 0.09));
       } else if (choices.length > 5) {
-        fontSize = Math.max(16, Math.floor(radius * 0.075));
+        fontSize = Math.max(22, Math.floor(radius * 0.11));
       }
       
       ctx.font = `bold ${fontSize}px Outfit`;
@@ -260,21 +254,10 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({ choices, onWinner,
   }, [choices, drawWheel]);
 
   return (
-    <div className={`flex flex-col items-center justify-center select-none ${isFullscreen ? 'p-8 w-full h-full' : 'p-6 h-full'}`}>
-      {/* Sound Controls */}
-      <div className={`w-full flex justify-end gap-2 mb-2 ${isFullscreen ? 'max-w-xl' : 'max-w-md'}`}>
-        <button
-          onClick={toggleMute}
-          className="p-2 rounded-xl bg-[#2c2c2e]/60 border border-white/5 hover:bg-[#2c2c2e]/90 text-slate-400 hover:text-white transition-all mac-btn cursor-pointer"
-          title={muted ? "Unmute sounds" : "Mute sounds"}
-        >
-          {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-        </button>
-      </div>
-
+    <div className={`flex flex-col items-center justify-center select-none w-full h-full ${isFullscreen ? 'p-8' : 'p-2 pt-10 pb-4'}`}>
       {/* Wheel Core Wrapper */}
       <div className={`relative w-full aspect-square flex items-center justify-center transition-all duration-300 ${
-        isFullscreen ? 'max-w-[480px] lg:max-w-[540px]' : 'max-w-[380px]'
+        isFullscreen ? 'max-w-[580px] lg:max-w-[640px]' : 'max-w-[415px]'
       }`}>
         {/* Glowing visual backdrop */}
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-cyan-500/5 rounded-full filter blur-xl -z-10" />
@@ -291,25 +274,23 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({ choices, onWinner,
         {/* Canvas wheel */}
         <canvas
           ref={canvasRef}
-          className={`w-full h-full cursor-pointer rounded-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)] border border-slate-900 transition-all duration-300 ${
-            isFullscreen ? 'max-w-[460px] lg:max-w-[520px]' : 'max-w-[360px]'
-          }`}
+          className="w-full h-full cursor-pointer rounded-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)] border border-slate-900 transition-all duration-300"
           onClick={spin}
         />
       </div>
 
       {/* Spin Button */}
-      <div className="mt-8 flex flex-col items-center gap-2">
+      <div className="mt-5 flex flex-col items-center gap-1.5">
         <button
           onClick={spin}
           disabled={isSpinning || choices.length < 2}
-          className="flex items-center gap-2.5 px-8 py-3.5 bg-white text-black hover:bg-slate-100 font-bold rounded-2xl shadow-md disabled:opacity-30 disabled:pointer-events-none transition-all text-sm tracking-widest uppercase mac-btn cursor-pointer"
+          className="flex items-center gap-2.5 px-10 py-3.5 bg-white text-black hover:bg-slate-100 font-extrabold rounded-full shadow-md disabled:opacity-30 disabled:pointer-events-none transition-all text-xs tracking-widest uppercase mac-btn cursor-pointer"
         >
           <Play className="w-4 h-4 fill-current" />
           Spin Wheel
         </button>
         {choices.length < 2 && (
-          <span className="text-xs text-slate-500 font-medium">
+          <span className="text-[10px] text-slate-500 font-medium animate-pulse">
             Requires at least 2 choices to spin!
           </span>
         )}

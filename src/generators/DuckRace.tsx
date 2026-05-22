@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import type { Choice } from '../types';
 import { soundManager } from '../utils/soundUtils';
-import { Play, Volume2, VolumeX } from 'lucide-react';
+import { Play } from 'lucide-react';
 
 interface DuckRaceProps {
   choices: Choice[];
@@ -27,8 +27,8 @@ const initDucks = (choices: Choice[], canvasHeight: number) => {
   if (choices.length === 0) return [];
 
   const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
-  const startX = 65 * dpr;
-  const paddingY = 40 * dpr;
+  const startX = 90 * dpr;
+  const paddingY = 100 * dpr;
   const usableHeight = canvasHeight - paddingY * 2;
   const laneHeight = choices.length > 1 ? usableHeight / (choices.length - 1) : usableHeight;
 
@@ -49,7 +49,6 @@ const initDucks = (choices: Choice[], canvasHeight: number) => {
 export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscreen, isLightMode }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [raceActive, setRaceActive] = useState(false);
-  const [muted, setMuted] = useState(soundManager.isMuted());
 
   // Store isLightMode in a ref so active physics loops can read the latest theme without stale closures
   const isLightModeRef = useRef(isLightMode);
@@ -60,11 +59,6 @@ export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscr
   const ducksRef = useRef<DuckState[]>([]);
   const animationFrameRef = useRef<number | null>(null);
   const waveOffsetRef = useRef(0);
-
-  const toggleMute = () => {
-    const newMuted = soundManager.toggleMute();
-    setMuted(newMuted);
-  };
 
 
 
@@ -114,7 +108,7 @@ export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscr
         }
 
         // Smooth speed interpolation (organic swimming feel)
-        duck.speed = duck.speed * 0.9 + targetSpeed * 0.1;
+        duck.speed = duck.speed * 0.7 + targetSpeed * 0.1;
         duck.x += duck.speed;
 
         // Check if crossed finish line
@@ -214,92 +208,133 @@ export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscr
       });
     }
 
-    // 5. Draw Ducks
+    // 5. Draw Ducks – chunky cartoon style with DPR-correct scaling
+    const totalDucks = ducksRef.current.length;
+    const dpr = window.devicePixelRatio || 1;
+    let scale = 2.0;                                     // base: 2× the duck coordinate unit
+    if (totalDucks > 3) {
+      scale = Math.max(0.85, 2.0 * 3.0 / totalDucks);   // shrink gracefully, but not below 0.85
+    }
+
     ducksRef.current.forEach((duck) => {
-      const bobbing = Math.sin(duck.bobTime) * 4;
+      const bobbing = Math.sin(duck.bobTime) * 5;
       const tilt = Math.cos(duck.bobTime) * 0.05;
 
       ctx.save();
       ctx.translate(duck.x, duck.y + bobbing);
+      ctx.scale(scale * dpr, scale * dpr);  // dpr baked in → same CSS size regardless of screen density
       ctx.rotate(tilt);
 
       // Boost engine particles
       if (duck.boostActive) {
         ctx.fillStyle = 'rgba(56, 189, 248, 0.5)';
         for (let i = 0; i < 5; i++) {
-          const px = -20 - Math.random() * 20;
-          const py = -5 + Math.random() * 10;
-          const pSize = 2 + Math.random() * 4;
+          const px = -40 - Math.random() * 30;
+          const py = -5 + Math.random() * 12;
+          const pSize = (3 + Math.random() * 6) / scale;
           ctx.beginPath();
           ctx.arc(px, py, pSize, 0, 2 * Math.PI);
           ctx.fill();
         }
       }
 
-      // Draw custom rubber duck SVG path dynamically on canvas
+      // ── Chunky cartoon rubber duck ──
       ctx.fillStyle = duck.choice.color;
-      
-      // Draw Duck body
+
+      // Body (big fat oval)
       ctx.beginPath();
-      // Main floaty base
-      ctx.ellipse(-5, 5, 18, 12, 0, 0, 2 * Math.PI);
+      ctx.ellipse(-10, 10, 36, 24, 0, 0, 2 * Math.PI);
       ctx.fill();
 
-      // Duck Tail
+      // Tail bump
       ctx.beginPath();
-      ctx.moveTo(-18, 2);
-      ctx.quadraticCurveTo(-26, -5, -20, -10);
-      ctx.quadraticCurveTo(-14, -5, -12, 0);
+      ctx.moveTo(-36, 4);
+      ctx.quadraticCurveTo(-54, -8, -42, -20);
+      ctx.quadraticCurveTo(-28, -8, -24, 2);
       ctx.closePath();
       ctx.fill();
 
-      // Neck and Head
+      // Neck + big round head
       ctx.beginPath();
-      ctx.arc(8, -12, 10, 0, 2 * Math.PI);
+      ctx.arc(16, -24, 20, 0, 2 * Math.PI);
       ctx.fill();
 
-      // Beak (Orange)
+      // Beak (large orange)
       ctx.fillStyle = '#f97316';
       ctx.beginPath();
-      ctx.moveTo(16, -15);
-      ctx.lineTo(24, -13);
-      ctx.lineTo(16, -10);
+      ctx.moveTo(32, -30);
+      ctx.lineTo(52, -24);
+      ctx.lineTo(32, -18);
       ctx.closePath();
       ctx.fill();
 
-      // Eye (White/Black)
+      // Beak line
+      ctx.strokeStyle = '#ea580c';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(32, -24);
+      ctx.lineTo(52, -24);
+      ctx.stroke();
+
+      // Eye white (large)
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(10, -15, 2.5, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.fillStyle = '#000000';
-      ctx.beginPath();
-      ctx.arc(10.5, -15, 1.2, 0, 2 * Math.PI);
+      ctx.arc(22, -31, 7, 0, 2 * Math.PI);
       ctx.fill();
 
-      // Wing Overlay (slightly brighter/darker than body)
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      // Eye pupil
+      ctx.fillStyle = '#111111';
       ctx.beginPath();
-      ctx.ellipse(-6, 4, 9, 6, -0.2, 0, 2 * Math.PI);
+      ctx.arc(24, -31, 3.5, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Eye shine
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(26, -33, 1.5, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Wing highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+      ctx.beginPath();
+      ctx.ellipse(-12, 8, 18, 12, -0.2, 0, 2 * Math.PI);
       ctx.fill();
 
       ctx.restore();
 
-      // Label floating centered above the duck
-      ctx.fillStyle = isLight ? '#0f172a' : '#ffffff';
-      const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
-      const fontSize = Math.max(14, Math.floor(15 * dpr));
-      ctx.font = `bold ${fontSize}px Outfit`;
+      // ── White pill name badge (drawn in screen/world space so it stays sharp) ──
+      const dpr2 = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+      const labelFontSize = Math.max(14 * dpr2, Math.floor(18 * scale * dpr2));
+      ctx.font = `bold ${labelFontSize}px Outfit`;
+      ctx.textBaseline = 'middle';
       ctx.textAlign = 'center';
-      
-      let lbl = duck.choice.text;
-      if (lbl.length > 20) lbl = lbl.substring(0, 18) + '...';
 
-      // Draw thick outline stroke for 100% legibility on waves/lines
-      ctx.strokeStyle = isLight ? '#f0f9ff' : '#020c1b';
-      ctx.lineWidth = Math.max(3, 2 * dpr);
-      ctx.strokeText(lbl, duck.x, duck.y - 18 * dpr);
-      ctx.fillText(lbl, duck.x, duck.y - 18 * dpr);
+      let lbl = duck.choice.text;
+      if (lbl.length > 14) lbl = lbl.substring(0, 12) + '…';
+
+      const metrics = ctx.measureText(lbl);
+      const padX = 14;
+      const padY2 = 7;
+      const badgeW = metrics.width + padX * 2;
+      const badgeH = labelFontSize + padY2 * 2;
+      const badgeCX = duck.x;
+      // Place badge below the duck body (body bottom = 34 duck-units × scale × dpr)
+      const badgeTop = duck.y + Math.sin(duck.bobTime) * 5 + 38 * scale * dpr;
+
+      // White rounded pill background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+      ctx.beginPath();
+      ctx.roundRect(badgeCX - badgeW / 2, badgeTop, badgeW, badgeH, badgeH / 2);
+      ctx.fill();
+
+      // Colored border ring
+      ctx.strokeStyle = duck.choice.color;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Dark label text
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText(lbl, badgeCX, badgeTop + badgeH / 2);
     });
   };
 
@@ -310,8 +345,9 @@ export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscr
       if (canvas) {
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width * dpr;
-        canvas.height = Math.max(260, choices.length * (isFullscreen ? 68 : 52) + 50) * dpr; // Scale canvas height based on choices!
+        canvas.width = (rect.width || 460) * dpr;
+        const fallbackHeight = isFullscreen ? 500 : 280;
+        canvas.height = (rect.height || fallbackHeight) * dpr; // Strictly fit canvas to layout rect height!
         ducksRef.current = initDucks(choices, canvas.height);
         draw();
       }
@@ -343,24 +379,20 @@ export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscr
           </span>
           <h3 className="text-lg font-bold text-white leading-none mt-0.5">Rubber Duck Race</h3>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleMute}
-            className="p-2 rounded-xl bg-[#2c2c2e]/60 border border-white/5 hover:bg-[#2c2c2e]/90 text-slate-400 hover:text-white transition-all mac-btn cursor-pointer"
-          >
-            {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </button>
-        </div>
       </div>
 
       {/* Track Box */}
-      <div className={`w-full bg-[#000000]/60 rounded-2xl overflow-y-auto scrollbar-thin border border-white/5 mac-shadow relative transition-all duration-300 ${
-        isFullscreen ? 'max-w-7xl max-h-[calc(100vh-260px)]' : 'max-w-5xl max-h-[460px]'
-      }`}>
+      <div
+        className={`w-full bg-[#000000]/60 rounded-2xl overflow-hidden border border-white/5 mac-shadow relative transition-all duration-300 ${
+          isFullscreen ? 'max-w-7xl h-[calc(100vh-260px)]' : ''
+        }`}
+        style={isFullscreen ? undefined : {
+          height: `${Math.min(900, Math.max(380, choices.length * 120))}px`
+        }}
+      >
         <canvas
           ref={canvasRef}
-          className="w-full block bg-transparent"
-          style={{ height: `${Math.max(260, choices.length * (isFullscreen ? 68 : 52) + 50)}px` }}
+          className="w-full h-full block bg-transparent"
         />
 
         {/* Empty warning overlay */}
