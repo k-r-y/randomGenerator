@@ -7,6 +7,7 @@ interface ClawMachineProps {
   choices: Choice[];
   onWinner: (winner: Choice) => void;
   isFullscreen?: boolean;
+  spinDuration?: number;
 }
 
 interface ToyCapsule {
@@ -51,7 +52,7 @@ const createCapsules = (choices: Choice[], cabinetWidth: number): ToyCapsule[] =
   });
 };
 
-export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isFullscreen }) => {
+export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isFullscreen, spinDuration = 8 }) => {
   const [active, setActive] = useState(false);
   const [statusText, setStatusText] = useState('INSERT COIN');
   const [capsules, setCapsules] = useState<ToyCapsule[]>(() => createCapsules(choices, 380));
@@ -109,6 +110,17 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
     const targetX = targetCapsule.x;
     const grabY = targetCapsule.y - 25; // drop distance to grab point
 
+    const dist1 = Math.abs(targetX - stateRef.current.clawX);
+    const dist2 = Math.abs(grabY - stateRef.current.clawY);
+    const dist3 = Math.abs(40 - grabY);
+    const dist4 = Math.abs(prizeChuteX - targetX);
+    const totalDistance = dist1 + dist2 + dist3 + dist4;
+
+    const totalMs = (spinDuration || 8) * 1000;
+    const movementTimeMs = Math.max(500, totalMs - 850); // reserve at least 500ms
+    const estimatedFrames = movementTimeMs / 16.667;
+    const step = Math.max(0.8, Math.min(12, totalDistance / estimatedFrames));
+
     let phase = 1; // 1: Horizontal Move, 2: Extend Cable, 3: Clamp, 4: Ascend, 5: Return to Chute, 6: Drop
 
     const loop = () => {
@@ -122,9 +134,9 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
       switch (phase) {
         case 1: { // 1. Horizontal movement to align target
           const dx = targetX - stateRef.current.clawX;
-          if (Math.abs(dx) > 2) {
-            const step = Math.sign(dx) * 3;
-            stateRef.current.clawX += step;
+          if (Math.abs(dx) > step) {
+            const dirStep = Math.sign(dx) * step;
+            stateRef.current.clawX += dirStep;
             setClawX(stateRef.current.clawX);
           } else {
             stateRef.current.clawX = targetX;
@@ -136,8 +148,8 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
 
         case 2: { // 2. Drop claw downward
           const dy = grabY - stateRef.current.clawY;
-          if (dy > 3) {
-            stateRef.current.clawY += 3.5;
+          if (dy > step) {
+            stateRef.current.clawY += step;
             setClawY(stateRef.current.clawY);
           } else {
             stateRef.current.clawY = grabY;
@@ -164,7 +176,7 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
 
         case 4: // 4. Lift claw upward
           if (stateRef.current.clawY > 40) {
-            stateRef.current.clawY -= 3;
+            stateRef.current.clawY -= step;
             setClawY(stateRef.current.clawY);
           } else {
             stateRef.current.clawY = 40;
@@ -175,9 +187,9 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
 
         case 5: { // 5. Horizontal return to prize drop slot (chute)
           const dropDx = prizeChuteX - stateRef.current.clawX;
-          if (Math.abs(dropDx) > 3) {
-            const step = Math.sign(dropDx) * 3;
-            stateRef.current.clawX += step;
+          if (Math.abs(dropDx) > step) {
+            const dirStep = Math.sign(dropDx) * step;
+            stateRef.current.clawX += dirStep;
             setClawX(stateRef.current.clawX);
           } else {
             stateRef.current.clawX = prizeChuteX;

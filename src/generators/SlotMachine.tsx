@@ -7,6 +7,7 @@ interface SlotMachineProps {
   choices: Choice[];
   onWinner: (winner: Choice) => void;
   isFullscreen?: boolean;
+  spinDuration?: number;
 }
 
 interface ReelState {
@@ -16,7 +17,7 @@ interface ReelState {
   items: Choice[];
 }
 
-export const SlotMachine: React.FC<SlotMachineProps> = ({ choices, onWinner, isFullscreen }) => {
+export const SlotMachine: React.FC<SlotMachineProps> = ({ choices, onWinner, isFullscreen, spinDuration = 8 }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [handlePulled, setHandlePulled] = useState(false);
 
@@ -95,7 +96,8 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({ choices, onWinner, isF
     setReels(updatedReels);
 
     const startTime = Date.now();
-    const durations = [1600, 2500, 3400]; // Stop reel timings (sequenced)
+    const totalMs = (spinDuration || 8) * 1000;
+    const durations = [totalMs * 0.45, totalMs * 0.7, totalMs * 1.0]; // Stop reel timings (sequenced)
     const speeds = [22, 28, 34]; // Spinning speeds per frame
 
     const lastTickFrame = [0, 0, 0];

@@ -8,9 +8,10 @@ interface RouletteWheelProps {
   onWinner: (winner: Choice) => void;
   isFullscreen?: boolean;
   isLightMode?: boolean;
+  spinDuration?: number;
 }
 
-export const RouletteWheel: React.FC<RouletteWheelProps> = ({ choices, onWinner, isFullscreen, isLightMode }) => {
+export const RouletteWheel: React.FC<RouletteWheelProps> = ({ choices, onWinner, isFullscreen, isLightMode, spinDuration = 8 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
 
@@ -192,15 +193,33 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({ choices, onWinner,
     // Spin start sounds
     soundManager.playLeverPull();
 
-    // Random initial rotational velocity
-    stateRef.current.velocity = 0.35 + Math.random() * 0.25;
+    const startTime = Date.now();
+    const durationMs = (spinDuration || 8) * 1000;
+    const decelerationMs = 1500; // decelerate over exactly 1.5 seconds
+    const constantDurationMs = durationMs - decelerationMs;
+    const peakVelocity = 0.22 + Math.random() * 0.04; // organic fast rotation speed
 
     let frameId: number;
+    let lastTime = Date.now();
 
     const animate = () => {
       const state = stateRef.current;
-      state.angle += state.velocity;
-      state.velocity *= 0.985; // Spin friction deceleration
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const dt = Math.min(3, (now - lastTime) / 16.666); // clamp dt to avoid huge jumps on tab change
+      lastTime = now;
+
+      let velocity = peakVelocity;
+      if (elapsed < constantDurationMs) {
+        velocity = peakVelocity;
+      } else {
+        const decelProgress = Math.min(1, (elapsed - constantDurationMs) / decelerationMs);
+        // Smooth quadratic ease-out deceleration
+        velocity = peakVelocity * Math.pow(1 - decelProgress, 2);
+      }
+
+      state.angle += velocity * dt;
+      state.velocity = velocity;
 
       // Sound Tick triggering logic
       const pointerChoice = getPointerChoice(state.angle);
@@ -214,7 +233,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({ choices, onWinner,
 
       drawWheel(state.angle);
 
-      if (state.velocity < 0.0012) {
+      if (elapsed >= durationMs) {
         // Wheel Stopped
         state.velocity = 0;
         state.isSpinning = false;

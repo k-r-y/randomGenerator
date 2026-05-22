@@ -11,7 +11,7 @@ import { ClawMachine } from './generators/ClawMachine';
 import { soundManager } from './utils/soundUtils';
 import confetti from 'canvas-confetti';
 import { 
-  Sparkles, Compass, Waves, Dices, Grid3X3, Box, Award, X, Volume2, VolumeX, Trash2, Sun, Moon, Maximize2, Minimize2
+  Sparkles, Compass, Waves, Dices, Grid3X3, Box, Award, X, Volume2, VolumeX, Trash2, Sun, Moon, Maximize2, Minimize2, Timer
 } from 'lucide-react';
 import './App.css';
 
@@ -40,6 +40,7 @@ function App() {
   const [muted, setMuted] = useState(soundManager.isMuted());
   const [isLightMode, setIsLightMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [spinDuration, setSpinDuration] = useState(8);
 
   // Manage light-theme root class to prevent fixed-position stacking context bugs
   useEffect(() => {
@@ -143,19 +144,19 @@ function App() {
 
       <div className="w-full flex-1 flex items-center justify-center overflow-visible">
         {activeTab === 'roulette' && (
-          <RouletteWheel choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} />
+          <RouletteWheel choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} spinDuration={spinDuration} />
         )}
         {activeTab === 'duck' && (
-          <DuckRace choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} />
+          <DuckRace choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} spinDuration={spinDuration} />
         )}
         {activeTab === 'slot' && (
-          <SlotMachine choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} />
+          <SlotMachine choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} spinDuration={spinDuration} />
         )}
         {activeTab === 'plinko' && (
-          <Plinko choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} />
+          <Plinko choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} spinDuration={spinDuration} />
         )}
         {activeTab === 'claw' && (
-          <ClawMachine choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} />
+          <ClawMachine choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} spinDuration={spinDuration} />
         )}
       </div>
     </div>
@@ -242,35 +243,71 @@ function App() {
         {/* Right Side Panel: Interactive generators + logs */}
         <main className="flex-1 flex flex-col p-6 min-h-0 overflow-y-auto gap-6 bg-[#000000]/10">
           
-          {/* Tab Selection Row */}
-          <div className="segmented-control p-1 flex items-center gap-0.5 overflow-x-auto w-full shrink-0 border border-white/5">
-            {[
-              { id: 'roulette', label: 'Roulette', icon: Compass, color: 'text-purple-400' },
-              { id: 'duck', label: 'Duck Race', icon: Waves, color: 'text-cyan-400' },
-              { id: 'slot', label: 'Slots', icon: Dices, color: 'text-amber-400' },
-              { id: 'plinko', label: 'Plinko', icon: Grid3X3, color: 'text-rose-400' },
-              { id: 'claw', label: 'Claw Grab', icon: Box, color: 'text-pink-400' },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isSelected = activeTab === tab.id;
-              return (
+          {/* Tab Selection & Timer Stepper Control Row */}
+          <div className="flex flex-col xl:flex-row items-center justify-between gap-4 w-full shrink-0">
+            {/* Tab Selection Row */}
+            <div className="segmented-control p-1 flex items-center gap-0.5 overflow-x-auto w-full border border-white/5 flex-1">
+              {[
+                { id: 'roulette', label: 'Roulette', icon: Compass, color: 'text-purple-400' },
+                { id: 'duck', label: 'Duck Race', icon: Waves, color: 'text-cyan-400' },
+                { id: 'slot', label: 'Slots', icon: Dices, color: 'text-amber-400' },
+                { id: 'plinko', label: 'Plinko', icon: Grid3X3, color: 'text-rose-400' },
+                { id: 'claw', label: 'Claw Grab', icon: Box, color: 'text-pink-400' },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isSelected = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id as GeneratorType);
+                      soundManager.playTick(500, 0.05);
+                    }}
+                    className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-bold text-xs tracking-wide transition-all shrink-0 cursor-pointer flex-1 segmented-button mac-btn ${
+                      isSelected 
+                        ? 'segmented-button-active text-white'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${tab.color}`} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Premium Global Timer Stepper Control */}
+            <div className="flex items-center gap-3 px-4 py-2 bg-[#1c1c1e]/60 border border-white/5 rounded-2xl shadow-md backdrop-blur-md shrink-0 w-full xl:w-auto justify-between xl:justify-start">
+              <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase flex items-center gap-1.5 select-none">
+                <Timer className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                Duration
+              </span>
+              <div className="flex items-center gap-1.5 bg-[#2c2c2e]/60 rounded-xl p-0.5 border border-white/5">
                 <button
-                  key={tab.id}
                   onClick={() => {
-                    setActiveTab(tab.id as GeneratorType);
+                    setSpinDuration(d => Math.max(3, d - 1));
+                    soundManager.playTick(400, 0.05);
+                  }}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/5 active:scale-90 transition-all text-base font-bold cursor-pointer"
+                  title="Decrease animation time"
+                >
+                  −
+                </button>
+                <span className="w-12 text-center text-xs font-extrabold text-white font-mono select-none">
+                  {spinDuration}s
+                </span>
+                <button
+                  onClick={() => {
+                    setSpinDuration(d => Math.min(20, d + 1));
                     soundManager.playTick(500, 0.05);
                   }}
-                  className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-bold text-xs tracking-wide transition-all shrink-0 cursor-pointer flex-1 segmented-button mac-btn ${
-                    isSelected 
-                      ? 'segmented-button-active text-white'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/5 active:scale-90 transition-all text-base font-bold cursor-pointer"
+                  title="Increase animation time"
                 >
-                  <Icon className={`w-4 h-4 ${tab.color}`} />
-                  {tab.label}
+                  +
                 </button>
-              );
-            })}
+              </div>
+            </div>
           </div>
 
           {/* Generator Core Game Board & Logs Panel Stack Area */}

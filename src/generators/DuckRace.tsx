@@ -8,6 +8,7 @@ interface DuckRaceProps {
   onWinner: (winner: Choice) => void;
   isFullscreen?: boolean;
   isLightMode?: boolean;
+  spinDuration?: number;
 }
 
 interface DuckState {
@@ -46,12 +47,11 @@ const initDucks = (choices: Choice[], canvasHeight: number) => {
   }));
 };
 
-export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscreen, isLightMode }) => {
+export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscreen, isLightMode, spinDuration = 8 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [raceActive, setRaceActive] = useState(false);
-  const [timerDuration, setTimerDuration] = useState(10);  // seconds
   const raceEndTimeRef = useRef<number>(0);
-  const timerDurationRef = useRef(timerDuration);
+  const timerDurationRef = useRef(spinDuration);
 
   // Store isLightMode in a ref so active physics loops can read the latest theme without stale closures
   const isLightModeRef = useRef(isLightMode);
@@ -59,10 +59,10 @@ export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscr
     isLightModeRef.current = isLightMode;
   }, [isLightMode]);
 
-  // Keep timerDuration in a ref so the animation loop always reads current value
+  // Keep timerDurationRef in sync with spinDuration prop
   useEffect(() => {
-    timerDurationRef.current = timerDuration;
-  }, [timerDuration]);
+    timerDurationRef.current = spinDuration;
+  }, [spinDuration]);
 
   const ducksRef = useRef<DuckState[]>([]);
   const animationFrameRef = useRef<number | null>(null);
@@ -87,10 +87,37 @@ export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscr
     const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
 
     // Set race end time based on current timerDuration
-    raceEndTimeRef.current = Date.now() + timerDurationRef.current * 1000;
+    const startTime = Date.now();
+    const totalMs = timerDurationRef.current * 1000;
+    raceEndTimeRef.current = startTime + totalMs;
+
+    const startX = 90 * dpr;
+    const actualDistance = finishLine - startX;
 
     const runFrame = () => {
       waveOffsetRef.current += 1.5 * dpr;
+
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const elapsedFraction = Math.min(1.0, elapsed / totalMs);
+
+      // Target leading position at this moment of the race
+      const desiredLeadX = startX + elapsedFraction * actualDistance;
+      
+      // Find current leading position
+      const currentLeadX = ducksRef.current.length > 0 
+        ? Math.max(...ducksRef.current.map(d => d.x))
+        : startX;
+
+      // Calculate dynamic pace controller scale to regulate swim speed
+      let paceScale = 1.0;
+      if (currentLeadX < desiredLeadX) {
+        // If ducks are lagging, speed them up proportionally to catch up
+        paceScale = 1.0 + (desiredLeadX - currentLeadX) / (40 * dpr);
+      } else {
+        // If ducks are ahead of schedule, slow them down gently
+        paceScale = Math.max(0.1, 1.0 - (currentLeadX - desiredLeadX) / (80 * dpr));
+      }
 
       // Update Duck positions
       ducksRef.current.forEach((duck) => {
@@ -120,7 +147,9 @@ export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscr
 
         // Smooth speed interpolation (organic swimming feel)
         duck.speed = duck.speed * 0.7 + targetSpeed * 0.1;
-        duck.x += duck.speed;
+        
+        // Apply paceScale feedback control to the step position update!
+        duck.x += duck.speed * paceScale;
 
         // Check if crossed finish line
         if (duck.x >= finishLine) {
@@ -357,6 +386,44 @@ export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscr
       ctx.fillStyle = '#0f172a';
       ctx.fillText(lbl, badgeCX, badgeTop + badgeH / 2);
     });
+
+    // 6. Draw Countdown timer badge
+    if (raceActive) {
+      const remaining = Math.max(0, raceEndTimeRef.current - Date.now()) / 1000;
+      const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+      ctx.save();
+      
+      const text = `TIME REMAINING: ${remaining.toFixed(1)}s`;
+      const fontSize = 14 * dpr;
+      ctx.font = `bold ${fontSize}px Outfit`;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'top';
+
+      const textWidth = ctx.measureText(text).width;
+      const padX = 12 * dpr;
+      const padY = 6 * dpr;
+      const rectW = textWidth + padX * 2;
+      const rectH = fontSize + padY * 2;
+      
+      const rx = width - rectW - 20 * dpr;
+      const ry = 20 * dpr;
+
+      // Outer glass background
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.beginPath();
+      ctx.roundRect(rx, ry, rectW, rectH, 6 * dpr);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.lineWidth = 1 * dpr;
+      ctx.stroke();
+
+      // Glowing text
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText(text, width - 20 * dpr - padX, ry + padY);
+
+      ctx.restore();
+    }
   };
 
   // Render initialization

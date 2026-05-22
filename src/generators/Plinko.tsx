@@ -8,6 +8,7 @@ interface PlinkoProps {
   onWinner: (winner: Choice) => void;
   isFullscreen?: boolean;
   isLightMode?: boolean;
+  spinDuration?: number;
 }
 
 interface Peg {
@@ -39,7 +40,7 @@ const getRandomDropProps = (boardWidth: number) => {
   return { dropX, vx };
 };
 
-export const Plinko: React.FC<PlinkoProps> = ({ choices, onWinner, isFullscreen, isLightMode }) => {
+export const Plinko: React.FC<PlinkoProps> = ({ choices, onWinner, isFullscreen, isLightMode, spinDuration = 8 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [ballActive, setBallActive] = useState(false);
   
@@ -77,6 +78,9 @@ export const Plinko: React.FC<PlinkoProps> = ({ choices, onWinner, isFullscreen,
 
     let reported = false;
 
+    const startTime = Date.now();
+    const totalMs = (spinDuration || 8) * 1000;
+
     const updatePhysics = () => {
       const ball = ballRef.current;
       if (!ball.active) return;
@@ -85,14 +89,32 @@ export const Plinko: React.FC<PlinkoProps> = ({ choices, onWinner, isFullscreen,
       const friction = 0.992;
       const bounce = 0.48;
 
-      // Apply forces
-      ball.vy += gravity;
-      ball.vx *= friction;
-      ball.vy *= friction;
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const elapsedFraction = Math.min(1.0, elapsed / totalMs);
+
+      // Target Y position for this fraction of the race
+      const desiredY = 30 + elapsedFraction * (boardHeight - 20 - 30);
+
+      // Calculate dynamic timeScale multiplier
+      const baseTimeScale = 4.5 / (spinDuration || 8);
+      let dynamicMultiplier = 1.0;
+      if (ball.y < desiredY) {
+        dynamicMultiplier = 1.0 + (desiredY - ball.y) / 30; // speed up
+      } else {
+        dynamicMultiplier = Math.max(0.05, 1.0 - (ball.y - desiredY) / 20); // slow down to a crawl
+      }
+
+      const currentTimeScale = baseTimeScale * dynamicMultiplier;
+
+      // Apply forces using currentTimeScale
+      ball.vy += gravity * currentTimeScale;
+      ball.vx *= Math.pow(friction, currentTimeScale);
+      ball.vy *= Math.pow(friction, currentTimeScale);
 
       // Update positions
-      ball.x += ball.vx;
-      ball.y += ball.vy;
+      ball.x += ball.vx * currentTimeScale;
+      ball.y += ball.vy * currentTimeScale;
 
       // 1. Sidewall boundary collisions
       if (ball.x - ball.radius < 0) {
@@ -155,24 +177,32 @@ export const Plinko: React.FC<PlinkoProps> = ({ choices, onWinner, isFullscreen,
 
       // 4. Landing check
       if (ball.y + ball.radius >= boardHeight - 20) {
-        ball.y = boardHeight - 20 - ball.radius;
-        ball.active = false;
-        setBallActive(false);
+        if (elapsedFraction < 0.96) {
+          // If it reached the bottom too early, apply a soft bounce up so it stays active
+          ball.y = boardHeight - 20 - ball.radius - 2;
+          ball.vy = -Math.abs(ball.vy) * 0.15 - 0.2;
+          ball.vx = (Math.random() - 0.5) * 1.0;
+          soundManager.playPlinkoBounce();
+        } else {
+          ball.y = boardHeight - 20 - ball.radius;
+          ball.active = false;
+          setBallActive(false);
 
-        // Find which bin the ball landed inside
-        let landingChoice = choices[0];
-        for (const bin of binsRef.current) {
-          if (ball.x >= bin.xStart && ball.x <= bin.xEnd) {
-            landingChoice = bin.choice;
-            break;
+          // Find which bin the ball landed inside
+          let landingChoice = choices[0];
+          for (const bin of binsRef.current) {
+            if (ball.x >= bin.xStart && ball.x <= bin.xEnd) {
+              landingChoice = bin.choice;
+              break;
+            }
           }
-        }
 
-        if (!reported) {
-          reported = true;
-          onWinner(landingChoice);
+          if (!reported) {
+            reported = true;
+            onWinner(landingChoice);
+          }
+          return;
         }
-        return;
       }
 
       draw();
