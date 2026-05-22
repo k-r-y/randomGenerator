@@ -109,7 +109,7 @@ function App() {
     <div 
       className={`flex flex-col items-center justify-center transition-all duration-300 ${
         isFullscreen 
-          ? 'fixed inset-0 z-[9999] bg-[#00000] p-8 overflow-y-auto w-screen h-screen game-fullscreen-panel' 
+          ? 'fixed inset-0 z-[9999] bg-black overflow-y-auto w-screen h-screen game-fullscreen-panel' 
           : 'w-full glass-panel rounded-3xl relative mac-shadow'
       }`}
     >

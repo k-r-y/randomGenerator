@@ -49,12 +49,20 @@ const initDucks = (choices: Choice[], canvasHeight: number) => {
 export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscreen, isLightMode }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [raceActive, setRaceActive] = useState(false);
+  const [timerDuration, setTimerDuration] = useState(10);  // seconds
+  const raceEndTimeRef = useRef<number>(0);
+  const timerDurationRef = useRef(timerDuration);
 
   // Store isLightMode in a ref so active physics loops can read the latest theme without stale closures
   const isLightModeRef = useRef(isLightMode);
   useEffect(() => {
     isLightModeRef.current = isLightMode;
   }, [isLightMode]);
+
+  // Keep timerDuration in a ref so the animation loop always reads current value
+  useEffect(() => {
+    timerDurationRef.current = timerDuration;
+  }, [timerDuration]);
 
   const ducksRef = useRef<DuckState[]>([]);
   const animationFrameRef = useRef<number | null>(null);
@@ -77,6 +85,9 @@ export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscr
     const finishLine = canvas.width - 100;
     let winnerReported = false;
     const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+
+    // Set race end time based on current timerDuration
+    raceEndTimeRef.current = Date.now() + timerDurationRef.current * 1000;
 
     const runFrame = () => {
       waveOffsetRef.current += 1.5 * dpr;
@@ -127,6 +138,16 @@ export const DuckRace: React.FC<DuckRaceProps> = ({ choices, onWinner, isFullscr
       });
 
       draw();
+
+      // Check if timer has expired — declare the leading duck winner
+      const remaining = raceEndTimeRef.current - Date.now();
+      if (remaining <= 0 && !winnerReported) {
+        const leader = ducksRef.current.reduce((a, b) => a.x > b.x ? a : b);
+        winnerReported = true;
+        setRaceActive(false);
+        onWinner(leader.choice);
+        return;
+      }
 
       if (!winnerReported) {
         animationFrameRef.current = requestAnimationFrame(runFrame);
