@@ -374,8 +374,8 @@ export const ColorGame: React.FC<ColorGameProps> = ({ onWinner, onHome }) => {
         .face-back   { transform: rotateY(180deg) translateZ(27px); }
         .face-left   { transform: rotateY(-90deg) translateZ(27px); }
         .face-right  { transform: rotateY(90deg) translateZ(27px); }
-        .face-top    { transform: rotateX(90deg) translateZ(27px); }
-        .face-bottom { transform: rotateX(-90deg) translateZ(27px); }
+        .face-top    { transform: rotateX(-90deg) translateZ(27px); }
+        .face-bottom { transform: rotateX(90deg) translateZ(27px); }
 
         .cube-shadow {
           position: absolute;
