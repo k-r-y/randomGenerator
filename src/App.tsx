@@ -8,6 +8,7 @@ import { DuckRace } from './generators/DuckRace';
 import { SlotMachine } from './generators/SlotMachine';
 import { Plinko } from './generators/Plinko';
 import { ClawMachine } from './generators/ClawMachine';
+import { ColorGame } from './generators/ColorGame';
 import { soundManager } from './utils/soundUtils';
 import confetti from 'canvas-confetti';
 import { 
@@ -15,7 +16,7 @@ import {
 } from 'lucide-react';
 import './App.css';
 
-type GeneratorType = 'roulette' | 'duck' | 'slot' | 'plinko' | 'claw';
+type GeneratorType = 'roulette' | 'duck' | 'slot' | 'plinko' | 'claw' | 'color';
 
 function App() {
   const [choices, setChoices] = useState<Choice[]>([
@@ -158,6 +159,9 @@ function App() {
         {activeTab === 'claw' && (
           <ClawMachine choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} spinDuration={spinDuration} />
         )}
+        {activeTab === 'color' && (
+          <ColorGame choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} spinDuration={spinDuration} onHome={() => { setActiveTab('roulette'); soundManager.playTick(600, 0.08); }} />
+        )}
       </div>
     </div>
   );
@@ -253,6 +257,7 @@ function App() {
                 { id: 'slot', label: 'Slots', icon: Dices, color: 'text-amber-400' },
                 { id: 'plinko', label: 'Plinko', icon: Grid3X3, color: 'text-rose-400' },
                 { id: 'claw', label: 'Claw Grab', icon: Box, color: 'text-pink-400' },
+                { id: 'color', label: 'Color Game', icon: Grid3X3, color: 'text-cyan-400' },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isSelected = activeTab === tab.id;
