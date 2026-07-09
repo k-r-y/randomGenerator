@@ -1,73 +1,71 @@
-# React + TypeScript + Vite
+# Random Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> A React-based random value generator with celebratory animations and a polished user interface.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Random Generator is a fast, interactive application for generating random values with visual feedback. Built with modern React and styled with Tailwind CSS, it provides a delightful user experience complete with confetti animations.
 
-## React Compiler
+## Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Random Generation:** Instantly generate random values with a single click.
+* **Confetti Animations:** Celebratory canvas-based confetti effects on successful generations.
+* **Responsive Design:** Fully responsive UI built with Tailwind CSS.
+* **Type Safe:** Full TypeScript support throughout the codebase.
+* **Fast Development:** Vite-powered dev server with HMR for rapid iteration.
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Category | Tools |
+|----------|-------|
+| **Frontend** | React 19, TypeScript |
+| **Styling** | Tailwind CSS 4, Lucide React Icons |
+| **Build Tool** | Vite 8 |
+| **Effects** | Canvas Confetti |
+| **Linting** | ESLint, TypeScript ESLint |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Prerequisites
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+* **Node.js** >= 18
+* **npm** or **yarn**
+
+### Installation & Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/k-r-y/randomGenerator.git
+   cd randomGenerator
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open your browser and navigate to `http://localhost:5173`
+
+### Build for Production
+
+```bash
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Output is generated in the `dist/` directory.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Other Commands
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run lint      # Run ESLint checks
+npm run preview   # Preview production build locally
 ```
+
+---
+
+**Live Demo:** [https://random-generator-delta.vercel.app](https://random-generator-delta.vercel.app)
