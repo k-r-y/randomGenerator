@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://random-generator-delta.vercel.app/sitemap.xml
+Sitemap: https://random-generator.vercel.app/sitemap.xml
