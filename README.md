@@ -68,4 +68,4 @@ npm run preview   # Preview production build locally
 
 ---
 
-**Live Demo:** [https://random-generator-delta.vercel.app](https://random-generator-delta.vercel.app)
+**Live Demo:** [https://random-generator-delta.vercel.app](https://kry-random-generator.vercel.app)
