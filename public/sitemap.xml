@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://random-generator.vercel.app/</loc>
-    <lastmod>2026-07-26</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-11-07</lastmod>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://random-generator.vercel.app/favicon.svg</image:loc>
+      <image:title>Kuji - Free Interactive Random Choice Generator Suite</image:title>
+      <image:caption>Kuji featuring Wheel of Fortune Spinner, Duck Race Simulator, Slot Machine, Plinko, and Claw Machine.</image:caption>
+    </image:image>
   </url>
 </urlset>

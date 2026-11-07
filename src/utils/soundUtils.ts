@@ -185,6 +185,50 @@ class SoundManager {
   }
 
   /**
+   * Authentic Philippine Jeepney dual-tone horn (Beep-beep!)
+   */
+  public playJeepneyHorn() {
+    if (this.muted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      // Dual pulses: short toot, followed by slightly longer toot
+      const pulses = [
+        { time: now, dur: 0.09 },
+        { time: now + 0.13, dur: 0.14 },
+      ];
+
+      pulses.forEach(({ time, dur }) => {
+        if (!this.ctx) return;
+        // Dual horn frequencies (harmonious F#4 and A#4)
+        [370, 466].forEach((freq) => {
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, time);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          gain.gain.setValueAtTime(0, time);
+          gain.gain.linearRampToValueAtTime(0.08, time + 0.01);
+          gain.gain.setValueAtTime(0.08, time + dur - 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+
+          osc.start(time);
+          osc.stop(time + dur);
+        });
+      });
+    } catch (e) {
+      console.warn("Audio failed to play", e);
+    }
+  }
+
+  /**
    * Spectacular win chime sweep
    */
   public playWin() {

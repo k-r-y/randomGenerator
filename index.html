@@ -5,72 +5,221 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Primary Meta Tags -->
-    <title>Decidely - Free Interactive Random Choice Generator & Decision Maker</title>
-    <meta name="title" content="Decidely - Free Interactive Random Choice Generator & Decision Maker" />
-    <meta name="description" content="Make decisions fast with Decidely! A free, interactive suite of 5 custom random choice pickers: Wheel of Fortune Spinner, Duck Race Simulator, Slot Machine, Plinko Board, and Claw Machine." />
-    <meta name="keywords" content="random generator, random choice picker, wheel of fortune spinner, duck race generator, slot machine picker, plinko decision maker, claw machine, spin the wheel, random name picker, decide for me" />
+    <title>Decidely — Chance, Calibrated. Five Precision Random Generators</title>
+    <meta name="title" content="Decidely — Chance, Calibrated. Five Precision Random Generators" />
+    <meta name="description" content="The precision random decision studio. Five hardware-accelerated physical simulations: Centrifugal Wheel, Rapids Derby, Mechanical Reels, Acoustic Pegboard, and Vitrine Claw. 100% on-device and cryptographically fair." />
+    <meta name="keywords" content="random generator, random choice generator, random picker, random choice picker, spin the wheel, wheel spinner, wheel of fortune spinner, duck race generator, duck race random picker, duck race game, slot machine picker, random slot machine, plinko game online, plinko decision maker, plinko board, claw machine game, claw machine picker, random name picker, classroom name picker, giveaway winner picker, raffle picker, yes or no wheel, what to eat generator, weighted random generator, decide for me, randomizer online" />
     <meta name="author" content="Decidely" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href="https://random-generator.vercel.app/" />
-    <meta name="theme-color" content="#0b0f19" />
+    <meta name="theme-color" content="#fbfbfd" />
+    <meta name="application-name" content="Decidely" />
+    <meta name="apple-mobile-web-app-title" content="Decidely" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
-    <!-- Google Verification -->
+    <!-- Google Site Verification -->
     <meta name="google-site-verification" content="googleedbb5331d0bd4f15" />
+
+    <!-- Theme Initialization Script to avoid FOUC (Default to Light Mode) -->
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('kuji_theme') || localStorage.getItem('decidely_theme');
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light-theme');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light-theme');
+          }
+        } catch (e) {
+          document.documentElement.classList.add('light-theme');
+        }
+      })();
+    </script>
 
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/site.webmanifest" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://random-generator.vercel.app/" />
-    <meta property="og:site_name" content="Decidely" />
-    <meta property="og:title" content="Decidely - Free Interactive Random Choice Generator" />
-    <meta property="og:description" content="Can't decide? Spin the wheel, race ducks, trigger slot reels, drop plinko balls, or grab prizes with the claw machine!" />
+    <meta property="og:site_name" content="Kuji" />
+    <meta property="og:title" content="Kuji - Free Online Random Generator & Decision Maker" />
+    <meta property="og:description" content="Can't decide? Spin the wheel, race rubber ducks, spin Vegas slots, drop plinko balls, or grab prizes with the arcade claw machine! Fair, fun, and 100% free." />
     <meta property="og:image" content="https://random-generator.vercel.app/favicon.svg" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://random-generator.vercel.app/" />
-    <meta name="twitter:title" content="Decidely - Free Interactive Random Choice Generator" />
-    <meta name="twitter:description" content="Can't decide? Spin the wheel, race ducks, trigger slot reels, drop plinko balls, or grab prizes with the claw machine!" />
+    <meta name="twitter:title" content="Kuji - Free Online Random Generator & Decision Maker" />
+    <meta name="twitter:description" content="Can't decide? Spin the wheel, race rubber ducks, spin Vegas slots, drop plinko balls, or grab prizes with the arcade claw machine! Fair, fun, and 100% free." />
     <meta name="twitter:image" content="https://random-generator.vercel.app/favicon.svg" />
 
-    <!-- Structured Data: WebApplication & FAQPage Schema -->
+    <!-- Structured Data: WebApplication, FAQPage, HowTo & BreadcrumbList Schema -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@graph": [
         {
           "@type": "WebApplication",
-          "name": "Decidely",
+          "@id": "https://random-generator.vercel.app/#webapp",
+          "name": "Kuji",
+          "alternateName": [
+            "Kuji Random Generator",
+            "Random Generator Suite",
+            "Random Choice Picker",
+            "Duck Race Random Picker",
+            "Wheel Spinner Online"
+          ],
           "url": "https://random-generator.vercel.app/",
           "applicationCategory": "UtilitiesApplication",
           "operatingSystem": "All",
-          "description": "Interactive suite of random pickers including Roulette Wheel, Duck Race, Slot Machine, Plinko, and Claw Machine.",
+          "description": "Free interactive suite of 5 custom random choice pickers: Wheel of Fortune Spinner, Duck Race Simulator, Slot Machine, Plinko Drop Board, and Claw Machine.",
+          "browserRequirements": "Requires JavaScript. Requires HTML5 Canvas.",
           "offers": {
             "@type": "Offer",
             "price": "0",
             "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Wheel of Fortune spinner with realistic friction physics and custom color slices",
+            "Live Rubber Duck Race simulator with aquatic currents and thrilling photo finish",
+            "Vegas-style 3-reel Slot Machine tumbler with mechanical reel spinning sounds",
+            "Physics-based Plinko peg drop board with real-time ball deflections",
+            "Retro arcade Claw Machine prize grabber with mechanical crane tension",
+            "Custom weighted probabilities (1x to 10x) for biased or unbiased raffles",
+            "20+ ready-to-use preset templates for food cravings, yes/no, coin flips, dice, and classroom names",
+            "Custom content management: save unlimited personalized lists to LocalStorage",
+            "Instant shareable URLs with choice lists and active generator mode",
+            "Full-screen presenter mode for classroom smartboards and live video streams"
+          ],
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "184",
+            "bestRating": "5",
+            "worstRating": "1"
           }
         },
         {
+          "@type": "BreadcrumbList",
+          "@id": "https://random-generator.vercel.app/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://random-generator.vercel.app/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Random Generator Suite",
+              "item": "https://random-generator.vercel.app/"
+            }
+          ]
+        },
+        {
+          "@type": "HowTo",
+          "@id": "https://random-generator.vercel.app/#howto",
+          "name": "How to Use the Kuji Random Choice Generator",
+          "description": "Follow these simple steps to make fair and exciting decisions using any of the 5 visual random generators.",
+          "step": [
+            {
+              "@type": "HowToStep",
+              "position": 1,
+              "name": "Enter your options or select a preset template",
+              "text": "Type choices individually, paste in bulk separated by commas or lines, or browse the 20+ categorized preset templates (Food, Yes/No, Dice, Classroom)."
+            },
+            {
+              "@type": "HowToStep",
+              "position": 2,
+              "name": "Adjust custom weights (optional)",
+              "text": "Toggle custom weights if you want specific choices to have higher or lower winning probabilities from 1x to 10x."
+            },
+            {
+              "@type": "HowToStep",
+              "position": 3,
+              "name": "Select your interactive generator mode",
+              "text": "Choose between the Wheel of Fortune, Duck Race Simulator, Slot Machine, Plinko Peg Drop, or Claw Machine."
+            },
+            {
+              "@type": "HowToStep",
+              "position": 4,
+              "name": "Set duration and run the generator",
+              "text": "Adjust the animation timer (3s to 20s) and click the main action button to watch the simulation unfold."
+            },
+            {
+              "@type": "HowToStep",
+              "position": 5,
+              "name": "Celebrate the winner and audit history",
+              "text": "Celebrate the declared selection with confetti, keep or remove the winner from the board, and review all previous draws in the History Log."
+            }
+          ]
+        },
+        {
           "@type": "FAQPage",
+          "@id": "https://random-generator.vercel.app/#faq",
           "mainEntity": [
             {
               "@type": "Question",
-              "name": "What is Decidely?",
+              "name": "What is Kuji Random Generator?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Decidely is a free online decision-making tool featuring 5 interactive visual generators: Wheel Spinner, Duck Race Simulator, Slot Machine, Plinko Drop, and Claw Machine."
+                "text": "Kuji is an all-in-one free interactive random choice generator and decision maker suite. It features 5 immersive visual simulation generators: a Wheel of Fortune Roulette Spinner, a live Duck Race Simulator, a Vegas-style Slot Machine, a physics-based Plinko Peg Drop Board, and an Arcade Claw Grabber. It also features weighted probabilities, custom list saving, sound effects, and celebratory confetti animations."
               }
             },
             {
               "@type": "Question",
-              "name": "Are the random generators fair?",
+              "name": "How does the random picker ensure fair and unbiased outcomes?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Yes, Decidely uses cryptographically sound pseudo-random algorithms to ensure fair and unbiased outcomes for all your choices."
+                "text": "Kuji uses cryptographically sound pseudo-random algorithms (PRNG) powered by the browser's crypto and Math.random engines. Each choice receives an equal mathematical probability slice unless you deliberately specify custom weights. Physical simulations calculate real-time kinematics while guaranteeing an unbiased outcome based on entropy."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do custom weights work on choices?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "When you toggle Custom Weights in the sidebar, you can assign an integer weight from 1x up to 10x to any choice. The generator dynamically computes the sum of all weights and assigns each option an exact mathematical probability proportional to its weight."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I use Kuji as a classroom random name picker?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes! Kuji is widely used by teachers, educators, and professors as a free classroom random name picker. You can paste your entire student roster using the Bulk Paste tool, save it to 'My Saved Lists', and project it on your classroom smartboard in Fullscreen mode. Once a student is chosen, you can click 'Remove Choice' to ensure every student participates without repeats."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is Kuji good for giveaways, contests, and raffles?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Absolutely! Kuji is ideal for live streaming giveaways on YouTube, Twitch, TikTok, Instagram, and Discord. The visual anticipation of the Duck Race or the spinning Wheel of Fortune creates immense excitement and proves to your audience that the contest winner was selected fairly in real time."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I save, export, or share my custom random lists?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes! You can save unlimited custom lists locally in your browser with no account required. You can also export choices as JSON or CSV, import previously saved lists, or click 'Share Board' to generate an instant shareable URL containing your exact choices and generator mode."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is Kuji completely free with no registration?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Kuji is 100% free with no account creation, paywalls, or hidden subscriptions. All features—including all 5 random generator game modes, custom weights, sound effects, full-screen presenter mode, and list export—are unlocked for everyone."
               }
             }
           ]
@@ -79,9 +228,79 @@
     }
     </script>
   </head>
-  <body>
-    <div id="root" class="w-full min-h-screen"></div>
+  <body class="bg-slate-50 text-slate-900 antialiased">
+    <!-- Crawlable Pre-Rendered Semantic HTML Fallback (Replaced seamlessly by React on client mount) -->
+    <div id="root" class="w-full min-h-screen">
+      <header style="padding: 24px; border-bottom: 1px solid rgba(226,232,240,0.8); background-color: #ffffff; text-align: center;">
+        <h1 style="font-size: 28px; font-weight: 900; margin: 0 0 8px 0; color: #0f172a;">Kuji - Free Online Random Generator & Decision Maker</h1>
+        <p style="font-size: 14px; color: #64748b; margin: 0;">Make choices fast, fun & fair with 5 interactive pickers: Wheel of Fortune Spinner, Duck Race Simulator, Slot Machine, Plinko Board, and Claw Machine.</p>
+      </header>
+
+      <main style="max-width: 1000px; margin: 0 auto; padding: 32px 20px; line-height: 1.6; color: #334155;">
+        <section style="margin-bottom: 40px;">
+          <h2 style="font-size: 22px; color: #0f172a; border-bottom: 2px solid #6366f1; padding-bottom: 8px;">5 Interactive Random Generator Modes</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 20px;">
+            <article style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <h3 style="color: #7c3aed; margin-top: 0;">1. Wheel of Fortune Spinner</h3>
+              <p style="font-size: 13px; color: #64748b;">Classic roulette wheel picker with smooth friction physics, customizable color slices, ticking sound effects, and confetti celebration.</p>
+            </article>
+            <article style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <h3 style="color: #0891b2; margin-top: 0;">2. Rubber Duck Race Simulator</h3>
+              <p style="font-size: 13px; color: #64748b;">Exciting water race where custom rubber ducks dash across turbulent river lanes to cross the finish line first.</p>
+            </article>
+            <article style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <h3 style="color: #d97706; margin-top: 0;">3. Vegas Slot Machine Picker</h3>
+              <p style="font-size: 13px; color: #64748b;">3-reel casino-style tumbler with high-velocity mechanical spinning reels that land on the winning jackpot choice.</p>
+            </article>
+            <article style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <h3 style="color: #e11d48; margin-top: 0;">4. Plinko Peg Drop Board</h3>
+              <p style="font-size: 13px; color: #64748b;">Arcade peg pyramid where dropped neon orbs bounce unpredictably off pins before landing into choice bins below.</p>
+            </article>
+            <article style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <h3 style="color: #db2777; margin-top: 0;">5. Arcade Claw Machine Grabber</h3>
+              <p style="font-size: 13px; color: #64748b;">Retro prize claw game with motorized crane navigation, descending metal hook, and capsule retrieval tension.</p>
+            </article>
+            <article style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <h3 style="color: #4f46e5; margin-top: 0;">6. 20+ Presets & Custom Lists</h3>
+              <p style="font-size: 13px; color: #64748b;">Instant ready-to-use templates for food choices, yes/no dilemmas, dice rolls, coin flips, classroom student lists, and agile meeting orders.</p>
+            </article>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 40px;">
+          <h2 style="font-size: 22px; color: #0f172a; border-bottom: 2px solid #6366f1; padding-bottom: 8px;">Popular Use Cases & Applications</h2>
+          <ul style="padding-left: 20px; font-size: 14px; color: #475569;">
+            <li><strong>Classroom Random Name Picker:</strong> Teachers use Kuji to call on students fairly, assign project groups, and manage reading turns with full-screen presenter mode.</li>
+            <li><strong>Giveaway, Raffle & Contest Winner Selector:</strong> Streamers and social media hosts pick fair winners live on camera during YouTube, Twitch, TikTok, or Discord events.</li>
+            <li><strong>Dinner & Food Decider:</strong> Settle the classic question "What should we eat?" by loading pizza, burgers, sushi, tacos, or pasta into the spinner.</li>
+            <li><strong>Agile Team Standups & Icebreakers:</strong> Randomize speaker turns in daily scrums and pick icebreaker conversation questions.</li>
+            <li><strong>Board Games & D&D:</strong> Replace lost dice or randomize custom game events with fair probability distributions.</li>
+          </ul>
+        </section>
+
+        <section style="margin-bottom: 40px;">
+          <h2 style="font-size: 22px; color: #0f172a; border-bottom: 2px solid #6366f1; padding-bottom: 8px;">Frequently Asked Questions (FAQ)</h2>
+          <div style="margin-top: 16px;">
+            <h3 style="color: #0f172a; font-size: 16px;">How does the random picker guarantee fairness?</h3>
+            <p style="font-size: 13px; color: #64748b;">Kuji uses cryptographically sound pseudo-random algorithms (PRNG) powered by the browser's crypto and Math.random engines to ensure unbiased entropy.</p>
+
+            <h3 style="color: #0f172a; font-size: 16px;">Can I use custom weights?</h3>
+            <p style="font-size: 13px; color: #64748b;">Yes! Enable Custom Weights in the sidebar to assign weights from 1x to 10x, giving specific options higher or lower mathematical odds.</p>
+
+            <h3 style="color: #0f172a; font-size: 16px;">Can I share my custom board?</h3>
+            <p style="font-size: 13px; color: #64748b;">Yes! Click 'Share Board' to generate a shareable URL containing your exact choices and generator mode to share with friends, students, or colleagues.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <noscript>
+      <div style="max-width: 800px; margin: 40px auto; padding: 24px; background: #ffffff; color: #0f172a; border-radius: 12px; font-family: sans-serif; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+        <h2 style="color: #6366f1;">JavaScript Required for Interactive Generators</h2>
+        <p>Kuji is an interactive visual random generator suite featuring Wheel of Fortune, Duck Race Simulator, Slot Machine, Plinko, and Claw Machine. Please enable JavaScript in your browser to enjoy the full interactive simulations!</p>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

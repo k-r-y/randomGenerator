@@ -1,521 +1,182 @@
-/* Inter / Outfit Google Font fallback */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 :root {
-  --font-sans: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  color-scheme: dark;
+  --font-apple: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Plus Jakarta Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Outfit", "Plus Jakarta Sans", sans-serif;
+  color-scheme: light;
+}
+
+/* Apple Light Theme (Clean Alabaster / Pure White) */
+html {
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
-  font-family: var(--font-sans);
-  background-color: #09090b; /* Apple-grade deep black for OLED contrast */
-  color: #ffffff; /* Apple signature off-white text */
+  font-family: var(--font-apple);
+  background-color: #fbfbfd;
+  color: #1d1d1f;
+  max-width: 100vw;
   overflow-x: hidden;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
 }
 
-/* macOS Minimalist Scrollbar */
+/* Subtle Apple dot pattern */
+.bg-apple-mesh {
+  background-color: #fbfbfd;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.dark .bg-apple-mesh {
+  background-color: #000000;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Dark mode override */
+.dark body,
+html.dark body {
+  background-color: #000000;
+  color: #f5f5f7;
+}
+
+/* Minimalist Apple Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: rgba(0, 0, 0, 0.18);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: rgba(0, 0, 0, 0.32);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
 }
 
-/* macOS Sonoma High-Grade Glassmorphism */
-.glass-panel {
-  background: rgba(28, 28, 30, 0.65); /* Apple system-gray-6 in dark mode */
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+/* Apple Bento Grid Cards */
+.apple-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-card:hover {
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.dark .apple-card {
+  background: #161617;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-.glass-card {
-  background: rgba(44, 44, 46, 0.35); /* Apple system-gray-4 */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+.dark .apple-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+  transform: translateY(-2px);
 }
 
-.glass-card:hover {
-  background: rgba(44, 44, 46, 0.55);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 0 0 1px rgba(255, 255, 255, 0.2);
-  transform: scale(1.01);
+/* Apple Bento Section Background */
+.apple-section-bg {
+  background-color: #f7f7f9;
 }
 
-/* Apple-style Soft Radial Ambient Highlights */
-.bg-ambient-glow {
-  background: radial-gradient(circle at center, rgba(175, 82, 222, 0.04) 0%, rgba(94, 92, 230, 0.02) 50%, transparent 100%);
-  pointer-events: none;
+.dark .apple-section-bg {
+  background-color: #0c0c0d;
 }
 
-/* Custom Scroll animations */
-@keyframes slot-reel-spin {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-3000px); }
+/* Apple Glass Header */
+.apple-glass-nav {
+  background: rgba(251, 251, 253, 0.85);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.slot-reel-active {
-  animation: slot-reel-spin 3s cubic-bezier(0.1, 0.8, 0.1, 1) forwards;
+.dark .apple-glass-nav {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Rubber Duck Floating motion */
-@keyframes duck-bob {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  25% {
-    transform: translateY(-4px) rotate(4deg);
-  }
-  75% {
-    transform: translateY(2px) rotate(-4deg);
-  }
-}
-
-.duck-floating {
-  animation: duck-bob 1.8s ease-in-out infinite;
-}
-
-/* iOS Segmented Control custom styles */
-.segmented-control {
-  background: rgba(120, 120, 128, 0.12);
-  border-radius: 9px;
-  padding: 2px;
-}
-
-.segmented-button {
-  border-radius: 7px;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.segmented-button-active {
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.12);
+/* Violet Primary Button */
+.apple-btn-primary {
+  background-color: #7c3aed;
   color: #ffffff;
+  border-radius: 9999px;
+  font-weight: 500;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.apple-btn-primary:hover {
+  background-color: #6d28d9;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.32);
+}
+.apple-btn-primary:active {
+  transform: scale(0.98);
 }
 
-/* Premium micro-shadows & details */
-.mac-shadow {
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.15);
+/* Secondary Pill */
+.apple-btn-secondary {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: #1d1d1f;
+  border-radius: 9999px;
+  font-weight: 500;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.apple-btn-secondary:hover {
+  background-color: rgba(0, 0, 0, 0.07);
+}
+.apple-btn-secondary:active {
+  transform: scale(0.98);
 }
 
-.mac-btn {
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+.dark .apple-btn-secondary {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f5f5f7;
+  border-color: rgba(255, 255, 255, 0.12);
 }
-.mac-btn:active {
-  transform: scale(0.97);
-}
-
-/* Premium Light Theme macOS-Grade overrides */
-.light-theme {
-  background-color: #f3f4f6 !important;
-  color: #1d1d1f !important;
+.dark .apple-btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.16);
 }
 
-/* Override body with a gorgeous premium light mesh gradient with blueprint grid */
-html.light-theme body {
-  background: 
-    radial-gradient(rgba(99, 102, 241, 0.015) 1.5px, transparent 1.5px),
-    radial-gradient(at 10% 10%, rgba(168, 85, 247, 0.16), transparent 50%),
-    radial-gradient(at 90% 10%, rgba(244, 63, 94, 0.14), transparent 45%),
-    radial-gradient(at 10% 90%, rgba(6, 182, 212, 0.16), transparent 50%),
-    radial-gradient(at 90% 90%, rgba(245, 158, 11, 0.12), transparent 45%),
-    #f3f4f6 !important;
-  background-size: 24px 24px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-  color: #1d1d1f !important;
+/* Subtle Pulsing Ambient Lighting */
+@keyframes ambient-float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-8px) scale(1.02); }
 }
 
-/* Opaque Fullscreen Light-Mode Cover: blocks underlying layout perfectly */
-.light-theme .game-fullscreen-panel {
-  background: 
-    radial-gradient(rgba(99, 102, 241, 0.015) 1.5px, transparent 1.5px),
-    radial-gradient(at 10% 10%, rgba(168, 85, 247, 0.18), transparent 50%),
-    radial-gradient(at 90% 10%, rgba(244, 63, 94, 0.15), transparent 45%),
-    radial-gradient(at 10% 90%, rgba(6, 182, 212, 0.18), transparent 50%),
-    radial-gradient(at 90% 90%, rgba(245, 158, 11, 0.14), transparent 45%),
-    #f3f4f6 !important;
-  background-size: 24px 24px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100% !important;
-  opacity: 1 !important;
-  z-index: 99999 !important;
+.animate-ambient-float {
+  animation: ambient-float 6s ease-in-out infinite;
 }
 
-/* Background canvas and page black reset */
-.light-theme .bg-black {
-  background: transparent !important; /* Let the stunning body mesh gradient shine through */
-}
-
-.light-theme .bg-\[\#09090b\] {
-  background: transparent !important;
-}
-
-.light-theme .bg-\[\#000000\]\/10 {
-  background-color: rgba(148, 163, 184, 0.02) !important;
-}
-
-/* Soft ambient light highlight */
-.light-theme .bg-ambient-glow {
-  background: radial-gradient(circle at 30% 20%, rgba(168, 85, 247, 0.04) 0%, rgba(99, 102, 241, 0.02) 40%, transparent 80%),
-              radial-gradient(circle at 80% 70%, rgba(6, 182, 212, 0.03) 0%, rgba(236, 72, 153, 0.02) 50%, transparent 80%) !important;
-}
-
-/* Glass Panels & Cards in Light Mode (Tactile Apple Acrylics) */
-.light-theme .glass-panel {
-  background: rgba(255, 255, 255, 0.8) !important;
-  backdrop-filter: blur(35px) !important;
-  -webkit-backdrop-filter: blur(35px) !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
-  box-shadow: 0 25px 60px rgba(99, 102, 241, 0.05), 
-              0 4px 12px rgba(100, 116, 139, 0.01), 
-              inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-}
-
-/* Make the main game container stand out with a beautiful purple shadow halo */
-.light-theme .flex-1.glass-panel {
-  border-color: rgba(168, 85, 247, 0.16) !important;
-  box-shadow: 0 35px 70px rgba(168, 85, 247, 0.04), 
-              0 0 1px rgba(168, 85, 247, 0.16),
-              inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-}
-
-.light-theme .glass-card {
-  background: rgba(255, 255, 255, 0.65) !important;
-  border-color: rgba(255, 255, 255, 0.9) !important;
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.light-theme .glass-card:hover {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border-color: rgba(168, 85, 247, 0.22) !important;
-  box-shadow: 0 22px 45px rgba(99, 102, 241, 0.06), 0 0 1px rgba(168, 85, 247, 0.12) !important;
-}
-
-/* Segmented Control (Tactile iOS Control Buttons) */
-.light-theme .segmented-control {
-  background: rgba(148, 163, 184, 0.08) !important;
-  border: 1px solid rgba(0, 0, 0, 0.03) !important;
-  box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.02) !important;
-}
-
-.light-theme .segmented-button:hover {
-  color: #0f172a !important;
-}
-
-.light-theme .segmented-button-active {
-  background: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.02) !important;
-  box-shadow: 0 4px 15px rgba(100, 116, 139, 0.08), 
-              0 1px 3px rgba(0, 0, 0, 0.04) !important;
-  color: #1d1d1f !important;
-}
-
-/* Inputs, Textareas, and Selections */
-.light-theme select,
-.light-theme input[type="text"],
-.light-theme textarea {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  border: 1.5px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.015) !important;
-  color: #0f172a !important;
-  transition: all 0.2s ease !important;
-}
-
-.light-theme select::placeholder,
-.light-theme input::placeholder,
-.light-theme textarea::placeholder {
-  color: #64748b !important;
-}
-
-.light-theme select:focus,
-.light-theme input:focus,
-.light-theme textarea:focus {
-  border-color: rgba(168, 85, 247, 0.5) !important;
-  background-color: #ffffff !important;
-  box-shadow: 0 0 0 3.5px rgba(168, 85, 247, 0.12), inset 0 1.5px 3px rgba(0, 0, 0, 0.01) !important;
-}
-
-/* Typography elements */
-.light-theme header h1 {
-  background: linear-gradient(to right, #7e22ce, #db2777) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  color: transparent !important;
-}
-
-.light-theme h2,
-.light-theme h3,
-.light-theme h4,
-.light-theme .text-white {
-  color: #0f172a !important;
-}
-
-.light-theme .text-slate-200 {
-  color: #0f172a !important;
-}
-
-.light-theme .text-slate-300 {
-  color: #1e293b !important;
-}
-
-.light-theme .text-slate-400 {
-  color: #334155 !important;
-}
-
-.light-theme .text-slate-500 {
-  color: #475569 !important;
-}
-
-/* Faded neons text highlights mapped to deep rich royal tones */
-.light-theme .text-cyan-400 {
-  color: #0e7490 !important;
-}
-
-.light-theme .text-purple-400 {
-  color: #7e22ce !important;
-}
-
-.light-theme .text-pink-400 {
-  color: #db2777 !important;
-}
-
-.light-theme .text-amber-400,
-.light-theme .text-amber-500 {
-  color: #b45309 !important;
-}
-
-.light-theme .text-rose-400 {
-  color: #e11d48 !important;
-}
-
-.light-theme .text-emerald-400 {
-  color: #047857 !important;
-}
-
-/* Scrollbars */
-.light-theme ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25) !important;
-}
-.light-theme ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.4) !important;
-}
-
-/* Choice list item overrides (Tactile White Glass Tags with dynamic colored shadows) */
-.light-theme .bg-\[\#1c1c1e\]\/40 {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 1px solid rgba(0, 0, 0, 0.05) !important;
-  border-left: 4px solid var(--choice-color, #7e22ce) !important;
-  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-}
-
-.light-theme .bg-\[\#1c1c1e\]\/40:hover {
-  background: #ffffff !important;
-  border-color: var(--choice-color) !important;
-  transform: translateY(-2px) scale(1.008) !important;
-  box-shadow: 0 12px 28px var(--choice-color-glow, rgba(168, 85, 247, 0.06)),
-              inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-}
-
-.light-theme .bg-\[\#1c1c1e\]\/20,
-.light-theme .bg-\[\#1c1c1e\]\/15 {
-  background-color: rgba(148, 163, 184, 0.04) !important;
-}
-
-.light-theme .bg-\[\#2c2c2e\]\/60 {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border: 1.5px solid rgba(0, 0, 0, 0.05) !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-}
-.light-theme .bg-\[\#2c2c2e\]\/60:hover {
-  background-color: #ffffff !important;
-  border-color: rgba(168, 85, 247, 0.25) !important;
-  box-shadow: 0 8px 16px rgba(168, 85, 247, 0.06) !important;
-}
-
-/* History logs card & inner rows */
-.light-theme .border-slate-800\/80 {
-  border-color: rgba(0, 0, 0, 0.06) !important;
-}
-.light-theme .border-slate-800\/50 {
-  border-color: rgba(0, 0, 0, 0.04) !important;
-}
-.light-theme .bg-slate-950\/20 {
-  background-color: rgba(148, 163, 184, 0.04) !important;
-}
-.light-theme .bg-slate-900\/35 {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  border-color: rgba(0, 0, 0, 0.04) !important;
-}
-.light-theme .bg-slate-900\/60:hover {
-  background-color: #ffffff !important;
-}
-.light-theme .border-slate-800\/30 {
-  border-color: rgba(0, 0, 0, 0.04) !important;
-}
-.light-theme .bg-slate-950\/40 {
-  background-color: rgba(148, 163, 184, 0.06) !important;
-  color: #475569 !important;
-}
-
-/* Winner Modal Overlay (Glorious Glass Acrylic) */
-.light-theme .bg-black\/60 {
-  background-color: rgba(15, 23, 42, 0.15) !important;
-  backdrop-filter: blur(10px) !important;
-}
-
-.light-theme .bg-\[\#1c1c1e\]\/90 {
-  background: rgba(255, 255, 255, 0.85) !important;
-  backdrop-filter: blur(40px) !important;
-  -webkit-backdrop-filter: blur(40px) !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
-  box-shadow: 0 40px 100px -15px rgba(100, 116, 139, 0.22), 
-              inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-}
-
-.light-theme .bg-white\/10 {
-  background-color: rgba(0, 0, 0, 0.05) !important;
-  border: 1px solid rgba(0, 0, 0, 0.04) !important;
-  color: #1d1d1f !important;
-}
-.light-theme .bg-white\/10:hover {
-  background-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-.light-theme .bg-white {
-  background-color: #1d1d1f !important;
-  color: #ffffff !important;
-}
-.light-theme .bg-white:hover {
-  background-color: #2c2c2e !important;
-}
-
-/* Fullscreen and special control buttons */
-.light-theme .bg-\[\#2c2c2e\]\/60 text-slate-400 {
-  color: #334155 !important;
-}
-
-/* Slot Machine Overrides (Polished Rose Gold & Honey Showcase Console) */
-.light-theme .bg-\[\#1c1c1e\]\/80 {
-  background: rgba(255, 255, 255, 0.9) !important;
-  border: 1.5px solid rgba(245, 158, 11, 0.25) !important;
-  box-shadow: 0 30px 70px rgba(245, 158, 11, 0.08), 
-              0 4px 16px rgba(100, 116, 139, 0.02),
-              inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-}
-
-/* Inner reels screen display (glorious cream gold viewport) */
-.light-theme .bg-black\/60 {
-  background: linear-gradient(135deg, rgba(254, 243, 199, 0.95) 0%, rgba(253, 230, 138, 0.6) 100%) !important;
-  border: 1.5px solid rgba(245, 158, 11, 0.2) !important;
-  box-shadow: inset 0 6px 20px rgba(245, 158, 11, 0.08) !important;
-}
-
-/* Inside reels individual slots cards */
-.light-theme .bg-\[\#2c2c2e\]\/60 {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border: 1.5px solid rgba(0, 0, 0, 0.04) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 
-              0 3px 8px rgba(0, 0, 0, 0.015) !important;
-}
-
-.light-theme .bg-\[\#2c2c2e\]\/60 .text-white {
-  color: #0f172a !important;
-}
-
-.light-theme .bg-black\/60 .text-white {
-  color: #0f172a !important;
-}
-
-/* Winning row frame indicator overlay */
-.light-theme .border-y.bg-white\/\[0\.04\] {
-  background-color: rgba(245, 158, 11, 0.08) !important;
-  border-top: 1.5px dashed rgba(245, 158, 11, 0.4) !important;
-  border-bottom: 1.5px dashed rgba(245, 158, 11, 0.4) !important;
-}
-
-.light-theme .bg-\[\#000000\]\/40 {
-  background-color: rgba(0, 0, 0, 0.04) !important;
-  border: 1px solid rgba(0, 0, 0, 0.03) !important;
-}
-
-/* Lower console mechanical metal lines */
-.light-theme .bg-\[\#2c2c2e\] {
-  background-color: #f1f5f9 !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-}
-
-/* Claw Machine Overrides (Frosted Rose Porcelain display case) */
-.light-theme .bg-slate-950 {
-  background: rgba(255, 255, 255, 0.9) !important;
-  border: 1.5px solid rgba(244, 63, 94, 0.22) !important;
-  box-shadow: 0 30px 70px rgba(244, 63, 94, 0.08), 
-              0 4px 16px rgba(100, 116, 139, 0.02), 
-              inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-}
-
-.light-theme .bg-slate-950\/90 {
-  background-color: rgba(255, 255, 255, 0.98) !important;
-  border-color: rgba(0, 0, 0, 0.05) !important;
-}
-
-/* Rose gold tint inside play area with fine diagonal grid */
-.light-theme .bg-slate-900\/30 {
-  background: 
-    radial-gradient(circle at center, rgba(255, 241, 242, 0.9) 0%, rgba(253, 224, 230, 0.5) 100%) !important;
-  border: 1.5px solid rgba(244, 63, 94, 0.18) !important;
-  box-shadow: inset 0 6px 24px rgba(244, 63, 94, 0.06), 
-              inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
-}
-
-.light-theme .border-slate-800 {
-  border-color: rgba(0, 0, 0, 0.05) !important;
-}
-
-.light-theme .border-slate-800\/40 {
-  border-color: rgba(0, 0, 0, 0.05) !important;
-}
-
-/* Style the lower button panel console as brushed white gold aluminium plate */
-.light-theme .bg-slate-900 {
-  background: linear-gradient(to bottom, #ffffff 30%, #f1f5f9 100%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02), inset 0 1px 0 #ffffff !important;
-}
-
-.light-theme .bg-slate-800 {
-  background-color: #f1f5f9 !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  color: #475569 !important;
-}
-.light-theme .bg-slate-800:hover {
-  background-color: #e2e8f0 !important;
-  color: #0f172a !important;
-}
-
-.light-theme .text-pink-500\/40 {
-  color: rgba(244, 63, 94, 0.6) !important;
-}
-
-/* Shadow drop systems */
-.light-theme .mac-shadow {
-  box-shadow: 0 25px 60px rgba(99, 102, 241, 0.05), 0 0 1px rgba(0, 0, 0, 0.05) !important;
+/* Press state tactile utility */
+.btn-press {
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-press:active {
+  transform: scale(0.98);
 }

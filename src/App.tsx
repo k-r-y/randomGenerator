@@ -1,60 +1,151 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { Choice, DrawResult } from './types';
+import type { Choice, DrawResult, GeneratorType } from './types';
+import { MAX_CHOICES } from './types';
 import { ChoiceSidebar } from './components/ChoiceSidebar';
 import { HistoryPanel } from './components/HistoryPanel';
+import { PresetModal } from './components/PresetModal';
+import { LandingPage } from './components/LandingPage';
 import { RouletteWheel } from './generators/RouletteWheel';
-import { DuckRace } from './generators/DuckRace';
+import { JeepneyRace } from './generators/JeepneyRace';
 import { SlotMachine } from './generators/SlotMachine';
 import { Plinko } from './generators/Plinko';
 import { ClawMachine } from './generators/ClawMachine';
 import { soundManager } from './utils/soundUtils';
+import type { PresetChoice } from './data/presets';
 import confetti from 'canvas-confetti';
 import { 
-  Sparkles, Compass, Waves, Dices, Grid3X3, Box, Award, X, Volume2, VolumeX, Trash2, Sun, Moon, Maximize2, Minimize2, Timer
+  Compass, Bus, Dices, Grid3X3, Box, Award, X, Volume2, 
+  VolumeX, Trash2, Sun, Moon, Maximize2, Minimize2, Share2, Check, Copy, RefreshCw, ArrowLeft
 } from 'lucide-react';
 import './App.css';
 
-type GeneratorType = 'roulette' | 'duck' | 'slot' | 'plinko' | 'claw';
+type ViewMode = 'landing' | 'app';
+
+const HARMONIZED_COLORS = [
+  '#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', 
+  '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#ec4899'
+];
 
 function App() {
-  const [choices, setChoices] = useState<Choice[]>([
-    { id: '1', text: 'Pizza 🍕', color: '#ef4444', weight: 1 },
-    { id: '2', text: 'Sushi 🍣', color: '#06b6d4', weight: 1 },
-    { id: '3', text: 'Burger 🍔', color: '#f59e0b', weight: 1 },
-    { id: '4', text: 'Tacos 🌮', color: '#f97316', weight: 1 },
-    { id: '5', text: 'Salad 🥗', color: '#10b981', weight: 1 },
-  ]);
+  const [currentView, setCurrentView] = useState<ViewMode>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const hasChoices = params.has('choices');
+        const hasMode = params.has('mode');
+        const hasApp = params.get('view') === 'app' || params.has('app');
+        const hash = window.location.hash.toLowerCase();
+        if (hasChoices || hasMode || hasApp || hash === '#app' || hash === '#generator') {
+          return 'app';
+        }
+      } catch (e) {
+        console.warn("Could not check URL for view mode", e);
+      }
+    }
+    return 'landing';
+  });
+  const [choices, setChoices] = useState<Choice[]>(() => {
+    // Check URL parameters for custom shared choices
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const choicesParam = params.get('choices');
+        if (choicesParam) {
+          const decoded = decodeURIComponent(choicesParam);
+          const items = decoded.split(',').map(s => s.trim()).filter(Boolean).slice(0, MAX_CHOICES);
+          if (items.length > 0) {
+            return items.map((text, idx) => ({
+              id: Math.random().toString(36).substring(2, 9),
+              text,
+              color: HARMONIZED_COLORS[idx % HARMONIZED_COLORS.length],
+              weight: 1,
+            }));
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to parse choices from URL", e);
+      }
+    }
+    return [
+      { id: '1', text: 'Pizza', color: '#ef4444', weight: 1 },
+      { id: '2', text: 'Sushi', color: '#06b6d4', weight: 1 },
+      { id: '3', text: 'Burger', color: '#f59e0b', weight: 1 },
+      { id: '4', text: 'Tacos', color: '#f97316', weight: 1 },
+      { id: '5', text: 'Salad', color: '#10b981', weight: 1 },
+    ];
+  });
+
   const [useWeights, setUseWeights] = useState(false);
-  const [activeTab, setActiveTab] = useState<GeneratorType>('roulette');
+  const [activeTab, setActiveTab] = useState<GeneratorType>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const modeParam = params.get('mode') as GeneratorType;
+        const hash = window.location.hash.replace('#', '').toLowerCase();
+        const validModes: GeneratorType[] = ['roulette', 'duck', 'slot', 'plinko', 'claw'];
+        if (modeParam && validModes.includes(modeParam)) return modeParam;
+        if (hash && validModes.includes(hash as GeneratorType)) return hash as GeneratorType;
+      } catch (e) {
+        console.warn("Failed to parse mode from URL", e);
+      }
+    }
+    return 'roulette';
+  });
+
   const [history, setHistory] = useState<DrawResult[]>(() => {
     try {
-      const savedHistory = localStorage.getItem('decidely_history');
+      const savedHistory = localStorage.getItem('kuji_history') || localStorage.getItem('decidely_history');
       return savedHistory ? JSON.parse(savedHistory) : [];
     } catch (e) {
       console.warn("Failed to load history", e);
       return [];
     }
   });
+
   const [winner, setWinner] = useState<Choice | null>(null);
   const [muted, setMuted] = useState(soundManager.isMuted());
-  const [isLightMode, setIsLightMode] = useState(false);
+  
+  // Default to Light Mode as requested by user!
+  const [isLightMode, setIsLightMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('kuji_theme') || localStorage.getItem('decidely_theme');
+      if (saved) return saved === 'light';
+    } catch (e) {
+      console.warn("Could not read theme", e);
+    }
+    return true; // Light Mode default
+  });
+
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [spinDuration, setSpinDuration] = useState(8);
+  const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
+  const [headerCopied, setHeaderCopied] = useState(false);
+  const [winnerCopied, setWinnerCopied] = useState(false);
+  const [mobileWorkspaceTab, setMobileWorkspaceTab] = useState<'simulation' | 'roster'>('simulation');
 
-  // Manage light-theme root class to prevent fixed-position stacking context bugs
+  // Manage theme classes
   useEffect(() => {
     if (isLightMode) {
+      document.documentElement.classList.remove('dark');
       document.documentElement.classList.add('light-theme');
+      try {
+        localStorage.setItem('kuji_theme', 'light');
+      } catch {
+        /* ignore storage error */
+      }
     } else {
+      document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light-theme');
+      try {
+        localStorage.setItem('kuji_theme', 'dark');
+      } catch {
+        /* ignore storage error */
+      }
     }
-    return () => {
-      document.documentElement.classList.remove('light-theme');
-    };
   }, [isLightMode]);
 
-  // Lock body scroll in fullscreen mode to prevent scrollbars or layout shifts
+  // Lock body scroll in fullscreen mode
   useEffect(() => {
     if (isFullscreen) {
       document.body.style.overflow = 'hidden';
@@ -66,39 +157,86 @@ function App() {
     };
   }, [isFullscreen]);
 
+  // Browser History & Popstate integration
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const hasChoices = params.has('choices');
+      const hasMode = params.has('mode');
+      const hasApp = params.get('view') === 'app' || params.has('app');
+      const hash = window.location.hash.toLowerCase();
+      if (hasChoices || hasMode || hasApp || hash === '#app' || hash === '#generator') {
+        setCurrentView('app');
+      } else {
+        setCurrentView('landing');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateToApp = (mode?: GeneratorType) => {
+    if (mode) {
+      setActiveTab(mode);
+    }
+    setCurrentView('app');
+    window.history.pushState(null, '', mode ? `?mode=${mode}#app` : '#app');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToLanding = () => {
+    setCurrentView('landing');
+    window.history.pushState(null, '', window.location.pathname);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleWinner = (drawWinner: Choice) => {
-    // 1. Play Dynamic Win Fanfare
     soundManager.playWin();
 
-    // 2. Explode satisfy-confetti!
     confetti({
-      particleCount: 180,
-      spread: 100,
+      particleCount: 160,
+      spread: 90,
       origin: { y: 0.6 },
-      colors: [drawWinner.color, '#ffffff', '#a855f7', '#06b6d4'],
+      colors: [drawWinner.color, '#6366f1', '#ec4899', '#10b981', '#f59e0b'],
     });
 
-    // 3. Set Winner state to trigger modern modal overlay popup
     setWinner(drawWinner);
+    setWinnerCopied(false);
 
-    // 4. Save to History logs
+    const generatorLabels: Record<GeneratorType, string> = {
+      roulette: 'Wheel',
+      duck: 'Jeepney',
+      slot: 'Reels',
+      plinko: 'Pegboard',
+      claw: 'Claw',
+    };
+
     const newResult: DrawResult = {
       id: Math.random().toString(36).substring(2, 9),
       choice: drawWinner,
-      generator: activeTab.toUpperCase(),
+      generator: generatorLabels[activeTab] || activeTab.toUpperCase(),
       timestamp: Date.now(),
     };
 
     setHistory((prev) => {
       const updated = [...prev, newResult];
-      localStorage.setItem('decidely_history', JSON.stringify(updated));
+      try {
+        localStorage.setItem('kuji_history', JSON.stringify(updated));
+      } catch (e) {
+        console.warn("Could not save history", e);
+      }
       return updated;
     });
   };
 
   const clearHistory = () => {
     setHistory([]);
-    localStorage.removeItem('decidely_history');
+    try {
+      localStorage.removeItem('kuji_history');
+      localStorage.removeItem('decidely_history');
+    } catch (e) {
+      console.warn("Could not clear history", e);
+    }
   };
 
   const toggleMute = () => {
@@ -106,51 +244,88 @@ function App() {
     setMuted(newMute);
   };
 
+  const handleTabChange = (tab: GeneratorType) => {
+    setActiveTab(tab);
+    soundManager.playTick(500, 0.05);
+    window.history.replaceState(null, '', `#${tab}`);
+  };
+
+  const handleSelectPreset = (presetItems: PresetChoice[]) => {
+    const mapped: Choice[] = presetItems.slice(0, MAX_CHOICES).map((item) => ({
+      id: Math.random().toString(36).substring(2, 9),
+      text: item.text,
+      color: item.color,
+      weight: item.weight,
+    }));
+    setChoices(mapped);
+  };
+
+  const handleShareBoard = () => {
+    const baseUrl = window.location.origin + window.location.pathname;
+    const choiceNames = choices.map(c => encodeURIComponent(c.text)).join(',');
+    const shareUrl = `${baseUrl}?mode=${activeTab}&choices=${choiceNames}`;
+    
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setHeaderCopied(true);
+      setTimeout(() => setHeaderCopied(false), 2500);
+    }).catch(() => {
+      window.prompt("Copy this shareable link:", shareUrl);
+    });
+  };
+
+  const handleCopyWinner = () => {
+    if (!winner) return;
+    const textToCopy = `The choice is: ${winner.text}! Picked fairly using Decidely.`;
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setWinnerCopied(true);
+      setTimeout(() => setWinnerCopied(false), 2500);
+    });
+  };
+
   const gameBoardContent = (
     <div 
       className={`flex flex-col items-center justify-center transition-all duration-300 ${
         isFullscreen 
-          ? 'fixed inset-0 z-[9999] bg-black overflow-y-auto w-screen h-screen game-fullscreen-panel' 
-          : 'w-full glass-panel rounded-3xl relative mac-shadow'
+          ? 'fixed inset-0 z-[9999] bg-[#fbfbfd] dark:bg-black overflow-y-auto w-screen h-screen' 
+          : 'w-full bg-white dark:bg-[#161617] rounded-[32px] relative border border-black/[0.06] dark:border-white/[0.08] shadow-[0_16px_45px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)]'
       }`}
     >
-      {/* Unified Controls Container */}
-      <div className="absolute top-4 right-4 z-[10000] flex items-center gap-2">
-        {/* Unified Sound Toggle */}
-        <button
-          onClick={toggleMute}
-          className="p-2.5 rounded-xl bg-[#2c2c2e]/60 border border-white/5 hover:bg-[#2c2c2e]/90 text-slate-400 hover:text-white transition-all mac-btn cursor-pointer shadow-md"
-          title={muted ? "Unmute sounds" : "Mute sounds"}
-        >
-          {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-        </button>
+      {/* Fullscreen Overlay Controls (Exit & Sound) */}
+      {isFullscreen && (
+        <div className="fixed top-4 right-4 z-[100] flex items-center gap-2">
+          <button
+            onClick={toggleMute}
+            className="p-2.5 rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 text-[#1d1d1f] dark:text-[#f5f5f7] transition-all btn-press cursor-pointer backdrop-blur-md"
+            title={muted ? "Unmute sound" : "Mute sound"}
+          >
+            {muted ? <VolumeX className="w-4 h-4 text-red-500" /> : <Volume2 className="w-4 h-4 text-violet-600 dark:text-violet-400" />}
+          </button>
 
-        {/* Fullscreen Button */}
-        <button
-          onClick={() => {
-            setIsFullscreen(!isFullscreen);
-            soundManager.playTick(600, 0.08);
-            // Dispatch resize event to trigger canvas resizing
-            setTimeout(() => {
-              window.dispatchEvent(new Event('resize'));
-            }, 50);
-          }}
-          className="p-2.5 rounded-xl bg-[#2c2c2e]/60 border border-white/5 hover:bg-[#2c2c2e]/90 text-slate-400 hover:text-white transition-all mac-btn cursor-pointer shadow-md"
-          title={isFullscreen ? "Exit Full Screen" : "Full Screen"}
-        >
-          {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-        </button>
-      </div>
+          <button
+            onClick={() => {
+              setIsFullscreen(false);
+              soundManager.playTick(600, 0.08);
+              setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+              }, 60);
+            }}
+            className="p-2.5 rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 text-[#1d1d1f] dark:text-[#f5f5f7] transition-all btn-press cursor-pointer backdrop-blur-md"
+            title="Exit Fullscreen"
+          >
+            <Minimize2 className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       <div className="w-full flex-1 flex items-center justify-center overflow-visible">
         {activeTab === 'roulette' && (
           <RouletteWheel choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} spinDuration={spinDuration} />
         )}
         {activeTab === 'duck' && (
-          <DuckRace choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} spinDuration={spinDuration} />
+          <JeepneyRace choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} spinDuration={spinDuration} />
         )}
         {activeTab === 'slot' && (
-          <SlotMachine choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} spinDuration={spinDuration} />
+          <SlotMachine choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} spinDuration={spinDuration} />
         )}
         {activeTab === 'plinko' && (
           <Plinko choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} isLightMode={isLightMode} spinDuration={spinDuration} />
@@ -158,144 +333,242 @@ function App() {
         {activeTab === 'claw' && (
           <ClawMachine choices={choices} onWinner={handleWinner} isFullscreen={isFullscreen} spinDuration={spinDuration} />
         )}
-
       </div>
     </div>
   );
 
-  return (
-    <div className="relative min-h-screen bg-black overflow-hidden flex flex-col">
-      {/* 1. Soft radial ambient highlight */}
-      <div className="absolute inset-0 bg-ambient-glow" />
+  if (currentView === 'landing') {
+    return (
+      <>
+        <LandingPage
+          onLaunchGenerator={navigateToApp}
+          onOpenPresets={() => setIsPresetModalOpen(true)}
+          isLightMode={isLightMode}
+          onToggleTheme={() => {
+            setIsLightMode(!isLightMode);
+            soundManager.playTick(600, 0.08);
+          }}
+        />
 
-      {/* 2. Top Header Navigation Bar */}
-      <header className={`relative glass-panel border-b border-white/5 px-6 py-4 flex items-center justify-between shrink-0 bg-[#1c1c1e]/40 transition-all duration-300 ${
-        isFullscreen ? 'z-0' : 'z-10'
+        {/* Preset Library Modal */}
+        <PresetModal
+          isOpen={isPresetModalOpen}
+          onClose={() => setIsPresetModalOpen(false)}
+          onSelectPreset={(presetItems) => {
+            handleSelectPreset(presetItems);
+            setIsPresetModalOpen(false);
+            navigateToApp();
+          }}
+          currentChoices={choices}
+        />
+      </>
+    );
+  }
+
+  return (
+    <div className="relative min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-white flex flex-col font-sans transition-colors bg-mesh-pattern">
+      {/* 1. Ambient lighting glow */}
+      <div className="absolute inset-0 bg-ambient-light pointer-events-none" />
+
+      {/* 2. Top Navigation Bar (Apple Frosted Glass) */}
+      <header className={`sticky top-0 z-30 apple-glass-nav border-b border-black/[0.06] dark:border-white/[0.08] px-4 sm:px-8 py-2.5 flex items-center justify-between shrink-0 ${
+        isFullscreen ? 'hidden' : ''
       }`}>
+        {/* Brand identity & Back Navigation */}
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-tr from-zinc-800 to-zinc-900 border border-white/10 rounded-xl shadow-lg">
-            <Sparkles className="w-5 h-5 text-purple-400 animate-spin-slow" />
-          </div>
-          <div>
-            <h1 className="text-xl font-extrabold tracking-wider bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent flex items-center gap-2 m-0 p-0 font-sans leading-none">
-              RAMDOMY
-            </h1>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1.5 block">
-              Premium Interactive Random Generator Game
+          <button
+            onClick={navigateToLanding}
+            className="apple-btn-secondary px-3 py-1.5 text-xs font-medium rounded-full flex items-center gap-1.5 cursor-pointer"
+            title="Return to Overview"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Overview</span>
+          </button>
+
+          <div className="h-4 w-px bg-black/[0.08] dark:bg-white/[0.12] hidden sm:block" />
+
+          <div 
+            onClick={navigateToLanding}
+            className="flex items-center gap-2 cursor-pointer group select-none"
+          >
+            <span className="text-[17px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">
+              Decidely
+            </span>
+            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.08] text-[#86868b]">
+              Studio
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          {/* Light/Dark Theme Switcher */}
+        {/* Right Header Controls */}
+        <div className="flex items-center gap-2">
+          {/* Preset Library Trigger Button */}
+          <button
+            onClick={() => setIsPresetModalOpen(true)}
+            className="apple-btn-secondary px-3.5 py-1.5 text-xs font-medium rounded-full flex items-center gap-1.5 cursor-pointer"
+          >
+            <Compass className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+            <span className="hidden sm:inline">Templates</span>
+          </button>
+
+          {/* Share Board Button */}
+          <button
+            onClick={handleShareBoard}
+            className="apple-btn-secondary px-3.5 py-1.5 text-xs font-medium rounded-full flex items-center gap-1.5 cursor-pointer"
+            title="Share this decision board"
+          >
+            {headerCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-[#86868b]" />}
+            <span className="hidden sm:inline">{headerCopied ? 'Link Copied' : 'Share'}</span>
+          </button>
+
+          {/* Theme Switcher (Light / Dark) */}
           <button
             onClick={() => {
               setIsLightMode(!isLightMode);
               soundManager.playTick(600, 0.08);
             }}
-            className="flex items-center gap-1.5 text-xs py-2 px-3.5 rounded-xl bg-[#2c2c2e]/60 border border-white/5 text-slate-300 hover:text-white hover:bg-[#2c2c2e]/90 transition-all shadow-md mac-btn cursor-pointer"
-            title="Toggle Light & Dark Mode"
+            className="apple-btn-secondary p-2 rounded-full cursor-pointer"
+            title={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
+            aria-label="Toggle theme"
           >
             {isLightMode ? (
-              <>
-                <Moon className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Dark Mode</span>
-              </>
+              <Moon className="w-3.5 h-3.5 text-[#1d1d1f]" />
             ) : (
-              <>
-                <Sun className="w-3.5 h-3.5 text-amber-400" />
-                <span>Light Mode</span>
-              </>
+              <Sun className="w-3.5 h-3.5 text-[#f5f5f7]" />
             )}
           </button>
 
-          {/* Mute indicator header trigger button */}
+          {/* Sound Mute Switcher */}
           <button
             onClick={toggleMute}
-            className="flex items-center gap-1.5 text-xs py-2 px-3.5 rounded-xl bg-[#2c2c2e]/60 border border-white/5 text-slate-300 hover:text-white hover:bg-[#2c2c2e]/90 transition-all shadow-md mac-btn cursor-pointer"
+            className="apple-btn-secondary p-2 rounded-full cursor-pointer"
+            title={muted ? "Unmute audio" : "Mute audio"}
+            aria-label="Toggle sound"
           >
             {muted ? (
-              <>
-                <VolumeX className="w-3.5 h-3.5 text-red-400" />
-                <span>Muted</span>
-              </>
+              <VolumeX className="w-3.5 h-3.5 text-red-500" />
             ) : (
-              <>
-                <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Sound On</span>
-              </>
+              <Volume2 className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
             )}
+          </button>
+
+          {/* Fullscreen View Switcher */}
+          <button
+            onClick={() => {
+              setIsFullscreen(true);
+              soundManager.playTick(600, 0.08);
+              setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+              }, 60);
+            }}
+            className="apple-btn-secondary p-2 rounded-full cursor-pointer"
+            title="Enter Fullscreen"
+            aria-label="Enter fullscreen"
+          >
+            <Maximize2 className="w-3.5 h-3.5 text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7]" />
           </button>
         </div>
       </header>
 
-      {/* 3. Core Working Dashboard Workspace panel */}
-      <div className={`relative flex-1 flex flex-col lg:flex-row min-h-0 overflow-y-auto lg:overflow-hidden transition-all duration-300 ${
+      {/* 3. Main Dashboard Workspace */}
+      <div className={`relative flex-1 flex flex-col lg:flex-row min-h-0 transition-all duration-300 ${
         isFullscreen ? 'z-0' : 'z-10'
       }`}>
-        {/* Left Side: Choices entries Sidebar component */}
-        <ChoiceSidebar
-          choices={choices}
-          setChoices={setChoices}
-          useWeights={useWeights}
-          setUseWeights={setUseWeights}
-        />
+        {/* Mobile View Switcher (Visible only below lg) */}
+        <div className="lg:hidden w-full sticky top-[48px] z-20 apple-glass-nav px-4 py-2 border-b border-black/[0.04] dark:border-white/[0.06] shrink-0">
+          <div className="flex p-1 bg-black/[0.04] dark:bg-white/[0.06] rounded-full border border-black/[0.04] dark:border-white/[0.06] w-full max-w-xs mx-auto">
+            <button
+              onClick={() => setMobileWorkspaceTab('simulation')}
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-full transition-all text-center cursor-pointer ${
+                mobileWorkspaceTab === 'simulation'
+                  ? 'bg-violet-600 text-white shadow-xs'
+                  : 'text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white'
+              }`}
+            >
+              Simulation
+            </button>
+            <button
+              onClick={() => setMobileWorkspaceTab('roster')}
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-full transition-all text-center cursor-pointer flex items-center justify-center gap-1.5 ${
+                mobileWorkspaceTab === 'roster'
+                  ? 'bg-violet-600 text-white shadow-xs'
+                  : 'text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white'
+              }`}
+            >
+              <span>Roster</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono leading-none ${
+                mobileWorkspaceTab === 'roster'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-black/[0.06] dark:bg-white/[0.1] text-[#86868b]'
+              }`}>
+                {choices.length}/{MAX_CHOICES}
+              </span>
+            </button>
+          </div>
+        </div>
 
-        {/* Right Side Panel: Interactive generators + logs */}
-        <main className="flex-1 flex flex-col p-6 min-h-0 overflow-y-auto gap-6 bg-[#000000]/10">
+        {/* Left Side: Choices Sidebar */}
+        <div className={`w-full lg:w-96 shrink-0 lg:sticky lg:top-[49px] lg:h-[calc(100vh-49px)] ${
+          mobileWorkspaceTab === 'roster' ? 'flex flex-col flex-1 min-h-[calc(100vh-105px)]' : 'hidden'
+        } lg:flex lg:flex-col`}>
+          <ChoiceSidebar
+            choices={choices}
+            setChoices={setChoices}
+            useWeights={useWeights}
+            setUseWeights={setUseWeights}
+          />
+        </div>
+
+        {/* Right Side Panel: Interactive Generators & History */}
+        <main className={`flex-1 flex flex-col p-3 sm:p-8 min-h-0 overflow-y-auto gap-5 sm:gap-8 ${mobileWorkspaceTab === 'simulation' ? 'flex' : 'hidden'} lg:flex`}>
           
-          {/* Tab Selection & Timer Stepper Control Row */}
-          <div className="flex flex-col xl:flex-row items-center justify-between gap-4 w-full shrink-0">
-            {/* Tab Selection Row */}
-            <div className="segmented-control p-1 flex items-center gap-0.5 overflow-x-auto w-full border border-white/5 flex-1">
+          {/* Tab Selector & Duration Stepper (Apple Segmented Bar) */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full shrink-0">
+            {/* Apple Segmented Control for Simulation Modes */}
+            <div className="flex items-center p-1 bg-black/[0.04] dark:bg-white/[0.06] rounded-full border border-black/[0.04] dark:border-white/[0.06] backdrop-blur-md overflow-x-auto max-w-full w-full sm:w-auto justify-between sm:justify-start scrollbar-none">
               {[
-                { id: 'roulette', label: 'Roulette', icon: Compass, color: 'text-purple-400' },
-                { id: 'duck', label: 'Duck Race', icon: Waves, color: 'text-cyan-400' },
-                { id: 'slot', label: 'Slots', icon: Dices, color: 'text-amber-400' },
-                { id: 'plinko', label: 'Plinko', icon: Grid3X3, color: 'text-rose-400' },
-                { id: 'claw', label: 'Claw Grab', icon: Box, color: 'text-pink-400' },
-
+                { id: 'roulette', label: 'Wheel', icon: Compass },
+                { id: 'duck', label: 'Jeepney', icon: Bus },
+                { id: 'slot', label: 'Reels', icon: Dices },
+                { id: 'plinko', label: 'Pegboard', icon: Grid3X3 },
+                { id: 'claw', label: 'Claw', icon: Box },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isSelected = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => {
-                      setActiveTab(tab.id as GeneratorType);
-                      soundManager.playTick(500, 0.05);
-                    }}
-                    className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-bold text-xs tracking-wide transition-all shrink-0 cursor-pointer flex-1 segmented-button mac-btn ${
+                    onClick={() => handleTabChange(tab.id as GeneratorType)}
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-medium transition-all shrink-0 cursor-pointer ${
                       isSelected 
-                        ? 'segmented-button-active text-white'
-                        : 'text-slate-400 hover:text-slate-200'
+                        ? 'bg-white dark:bg-zinc-800 text-violet-700 dark:text-violet-300 shadow-xs font-semibold'
+                        : 'text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7]'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${tab.color}`} />
-                    {tab.label}
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
                   </button>
                 );
               })}
             </div>
 
-            {/* Premium Global Timer Stepper Control */}
-            <div className="flex items-center gap-3 px-4 py-2 bg-[#1c1c1e]/60 border border-white/5 rounded-2xl shadow-md backdrop-blur-md shrink-0 w-full xl:w-auto justify-between xl:justify-start">
-              <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase flex items-center gap-1.5 select-none">
-                <Timer className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+            {/* Apple Pill Stepper for Duration */}
+            <div className="inline-flex items-center gap-2.5 px-3 py-1 bg-black/[0.04] dark:bg-white/[0.06] rounded-full border border-black/[0.04] dark:border-white/[0.06] text-xs font-medium text-[#86868b] self-center sm:self-auto">
+              <span className="text-[10px] sm:text-[11px] font-semibold text-[#86868b] uppercase tracking-wider select-none">
                 Duration
               </span>
-              <div className="flex items-center gap-1.5 bg-[#2c2c2e]/60 rounded-xl p-0.5 border border-white/5">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => {
                     setSpinDuration(d => Math.max(3, d - 1));
                     soundManager.playTick(400, 0.05);
                   }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/5 active:scale-90 transition-all text-base font-bold cursor-pointer"
+                  className="w-5 h-5 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-[#1d1d1f] dark:text-white shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer font-bold select-none text-xs"
                   title="Decrease animation time"
                 >
                   −
                 </button>
-                <span className="w-12 text-center text-xs font-extrabold text-white font-mono select-none">
+                <span className="w-7 text-center text-xs font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] font-mono select-none">
                   {spinDuration}s
                 </span>
                 <button
@@ -303,7 +576,7 @@ function App() {
                     setSpinDuration(d => Math.min(20, d + 1));
                     soundManager.playTick(500, 0.05);
                   }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/5 active:scale-90 transition-all text-base font-bold cursor-pointer"
+                  className="w-5 h-5 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-[#1d1d1f] dark:text-white shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer font-bold select-none text-xs"
                   title="Increase animation time"
                 >
                   +
@@ -312,15 +585,14 @@ function App() {
             </div>
           </div>
 
-          {/* Generator Core Game Board & Logs Panel Stack Area */}
-          <div className="flex-1 flex flex-col items-center gap-6 w-full min-h-0">
-            {/* Center Column: Game board view viewport */}
+          {/* Generator Arena & History Stack */}
+          <div className="flex-1 flex flex-col items-center gap-8 w-full min-h-0">
+            {/* Center: Generator Viewport */}
             <div className="w-full min-h-[520px] flex flex-col shrink-0">
               {isFullscreen ? (
                 <>
-                  {/* Responsive Glassmorphic Dashboard Placeholder */}
-                  <div className="w-full h-full glass-panel rounded-3xl relative mac-shadow flex items-center justify-center text-slate-500">
-                    <span className="text-xs font-semibold uppercase tracking-wider animate-pulse text-slate-400">Running in full screen...</span>
+                  <div className="w-full h-full bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/80 dark:border-white/5 flex items-center justify-center text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider animate-pulse">Running in full screen...</span>
                   </div>
                   {createPortal(gameBoardContent, document.body)}
                 </>
@@ -329,8 +601,8 @@ function App() {
               )}
             </div>
 
-            {/* History panel logs directly below the game */}
-            <div className="w-full shrink-0 pb-6">
+            {/* Decision History */}
+            <div className="w-full shrink-0 mb-8">
               <HistoryPanel history={history} clearHistory={clearHistory} />
             </div>
           </div>
@@ -338,67 +610,84 @@ function App() {
         </main>
       </div>
 
-      {/* 4. Glassmorphic Modal overlay popup when a winner is drawn */}
+      {/* 4. Preset Library Modal */}
+      <PresetModal
+        isOpen={isPresetModalOpen}
+        onClose={() => setIsPresetModalOpen(false)}
+        onSelectPreset={handleSelectPreset}
+        currentChoices={choices}
+      />
+
+      {/* 5. Winner Celebration Modal Overlay (Apple Dialog Sheet) */}
       {winner && createPortal(
-        <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md z-[10050] flex items-center justify-center p-6 animate-fade-in select-none">
+        <div className="fixed inset-0 bg-black/35 dark:bg-black/65 backdrop-blur-xl z-[10050] flex items-center justify-center p-6 animate-fade-in select-none">
           <div 
-            className="relative w-full max-w-md bg-[#1c1c1e]/90 backdrop-blur-3xl border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-[0_30px_70px_rgba(0,0,0,0.8)] animate-scale-up"
-            style={{
-              boxShadow: `0 0 40px ${winner.color}15, 0 30px 70px rgba(0,0,0,0.8)`,
-              borderColor: `${winner.color}25`
-            }}
+            className="relative w-full max-w-sm bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] rounded-[32px] p-8 flex flex-col items-center justify-center text-center shadow-[0_24px_70px_rgba(0,0,0,0.18)] animate-scale-up"
           >
-            {/* Close cross corner button */}
+            {/* Close button */}
             <button
               onClick={() => setWinner(null)}
-              className="absolute top-4 right-4 p-2 bg-[#2c2c2e]/60 rounded-full border border-white/5 hover:border-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="absolute top-4 right-4 p-2 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white transition-all cursor-pointer"
+              aria-label="Close dialog"
             >
               <X className="w-4 h-4" />
             </button>
 
-            {/* Glowing Trophy circle marker */}
+            {/* Minimal Disc Badge */}
             <div 
-              className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg mb-6 border-4 border-[#1c1c1e]"
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-5 border-2 border-white/80 shadow-md"
               style={{ 
                 backgroundColor: winner.color,
-                boxShadow: `0 0 25px ${winner.color}50` 
+                boxShadow: `0 8px 24px ${winner.color}40` 
               }}
             >
-              <Award className="w-10 h-10 text-white animate-bounce" />
+              <Award className="w-8 h-8 text-white" />
             </div>
 
-            {/* Win announcement labels */}
-            <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase font-mono">
-              THE SELECTION IS DECLARED
+            {/* Winner Announcement */}
+            <span className="text-[11px] font-semibold tracking-wider text-[#86868b] uppercase">
+              Selected Outcome
             </span>
 
-            {/* Glowing Options Winner display */}
-            <h2 className="text-4xl lg:text-5xl font-black text-white leading-tight mt-3 mb-2 tracking-tight break-words w-full font-sans">
+            {/* Bold Winner Display */}
+            <h2 className="text-3xl sm:text-4xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] leading-tight mt-1.5 mb-2 tracking-tight break-words w-full">
               {winner.text}
             </h2>
 
-            <p className="text-xs text-slate-400 max-w-[240px] mt-2 mb-8">
-              Drawn fairly via the interactive {activeTab.toUpperCase()} generator pool.
+            <p className="text-xs text-[#86868b] max-w-[260px] mb-6 leading-relaxed">
+              Drawn fairly via {activeTab === 'roulette' ? 'Roulette Wheel' : activeTab === 'duck' ? 'Jeepney Race' : activeTab === 'slot' ? 'Slot Machine' : activeTab === 'plinko' ? 'Plinko Board' : 'Claw Machine'}.
             </p>
 
-            {/* Action buttons */}
-            <div className="flex w-full gap-3">
-              <button
-                onClick={() => {
-                  setChoices((prev) => prev.filter((c) => c.id !== winner.id));
-                  setWinner(null);
-                }}
-                className="flex-1 py-3 text-xs font-bold bg-red-600 hover:bg-red-500 text-white rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-1.5 mac-btn"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Remove Choice
-              </button>
+            {/* Action Buttons */}
+            <div className="flex flex-col w-full gap-2">
               <button
                 onClick={() => setWinner(null)}
-                className="flex-1 py-3 text-xs font-bold bg-white/10 hover:bg-white/15 text-white rounded-2xl border border-white/5 transition-all cursor-pointer mac-btn"
+                className="apple-btn-primary w-full py-3 rounded-full text-xs font-semibold cursor-pointer flex items-center justify-center gap-2"
               >
-                Keep & Close
+                <RefreshCw className="w-3.5 h-3.5" />
+                Done & Pick Again
               </button>
+
+              <div className="flex w-full gap-2 mt-1">
+                <button
+                  onClick={handleCopyWinner}
+                  className="apple-btn-secondary flex-1 py-2.5 rounded-full text-xs font-medium cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  {winnerCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#86868b]" />}
+                  <span>{winnerCopied ? 'Copied' : 'Copy'}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setChoices((prev) => prev.filter((c) => c.id !== winner.id));
+                    setWinner(null);
+                  }}
+                  className="apple-btn-secondary flex-1 py-2.5 rounded-full text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 cursor-pointer flex items-center justify-center gap-1.5"
+                  title="Remove this choice from the pool"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Remove</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>,

@@ -22,14 +22,20 @@ const createCapsules = (choices: Choice[], cabinetWidth: number): ToyCapsule[] =
   if (choices.length === 0) return [];
   
   // We want a beautiful, stacked, natural-looking toy pile
-  // The play area is between minX=100 and maxX=340
-  const minX = 100;
-  const maxX = cabinetWidth - 45;
+  // The play area is between minX=92 and maxX=cabinetWidth-32
+  const minX = 92;
+  const maxX = cabinetWidth - 32;
   const usableWidth = maxX - minX;
   
+  // Dynamic density so up to 100 capsules nestle naturally inside the glass pit
+  const totalCount = choices.length;
+  const isDense = totalCount > 40;
+  const isMedium = totalCount > 20;
+  const capsulesPerRow = isDense ? 12 : (isMedium ? 8 : 6);
+  const totalRows = Math.ceil(totalCount / capsulesPerRow);
+  const rowStep = isDense ? 11 : Math.max(12, Math.min(22, 110 / Math.max(1, totalRows)));
+  
   return choices.map((choice, index) => {
-    // Calculate row and column positions
-    const capsulesPerRow = 6;
     const row = Math.floor(index / capsulesPerRow);
     const col = index % capsulesPerRow;
     
@@ -37,10 +43,11 @@ const createCapsules = (choices: Choice[], cabinetWidth: number): ToyCapsule[] =
     const stagger = (row % 2 === 0) ? 0 : (usableWidth / capsulesPerRow) / 2;
     
     // Base x position plus random organic offset
-    const x = minX + (col * (usableWidth / capsulesPerRow)) + stagger + (Math.random() - 0.5) * 8;
+    const x = minX + (col * (usableWidth / capsulesPerRow)) + stagger + (Math.random() - 0.5) * 4;
     
-    // Base y stack level (from bottom y=242 up) plus random organic bounce offset
-    const y = 242 - (row * 24) + (Math.random() - 0.5) * 4;
+    // Base y stack level constrained to bottom pit area
+    const minY = isDense ? 142 : 118;
+    const y = Math.max(minY, 242 - (row * rowStep) + (Math.random() - 0.5) * 3);
 
     return {
       id: Math.random().toString(36).substring(2, 9),
@@ -243,83 +250,78 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 w-full h-full select-none">
-      {/* Upper header controls */}
-      <div className={`w-full flex justify-between items-center mb-3 transition-all duration-300 ${
-        isFullscreen ? 'max-w-md scale-110' : 'max-w-sm'
-      }`}>
-        <div>
-          <span className="text-xs font-bold text-pink-400 uppercase tracking-widest animate-pulse">
-            Retro Grabber
-          </span>
-          <h3 className="text-lg font-bold text-white leading-none mt-0.5">Claw Machine</h3>
-        </div>
-      </div>
-
+    <div className="flex flex-col items-center justify-center p-2 sm:p-4 w-full h-full select-none">
       {/* Main Claw cabinet graphic structure */}
-      <div className={`relative bg-slate-950 rounded-3xl border border-slate-800 p-4 shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col items-center w-full overflow-hidden transition-all duration-300 ${
-        isFullscreen ? 'max-w-[380px] scale-110 lg:scale-115 my-6' : 'max-w-[340px]'
+      <div className={`relative bg-white dark:bg-[#161617] rounded-3xl border border-black/[0.06] dark:border-white/10 p-4 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)] flex flex-col items-center w-full overflow-hidden transition-all duration-300 ${
+        isFullscreen ? 'max-w-[420px] scale-105 lg:scale-110 my-4' : 'max-w-[380px]'
       }`}>
-        {/* Neon light frame around cabinet windows */}
-        <div className="absolute inset-0 border-[3px] border-pink-500/20 pointer-events-none rounded-3xl" />
+        {/* Subtle accent border around cabinet windows */}
+        <div className="absolute inset-0 border-[2px] border-violet-500/15 pointer-events-none rounded-3xl" />
         
         {/* Arcade Status Display Panel */}
-        <div className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 flex items-center justify-center mb-3 shadow-inner">
-          <span className="text-xs font-black tracking-widest text-pink-400 font-mono text-center animate-pulse">
+        <div className="w-full bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.06] rounded-xl px-4 py-2 flex items-center justify-center mb-3 shadow-inner">
+          <span className="text-xs font-bold tracking-widest text-violet-600 dark:text-violet-400 font-mono text-center">
             {statusText}
           </span>
         </div>
 
         {/* Glass Window panel where toys sit */}
-        <div className="relative bg-slate-900/30 w-full h-[270px] border-2 border-slate-800 rounded-2xl overflow-hidden shadow-inner">
+        <div className="relative bg-black/[0.02] dark:bg-black/40 w-full h-[270px] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl overflow-hidden shadow-inner">
           
           {/* Back wall layout grid pattern */}
           <div className="absolute inset-0 bg-grid-drift opacity-10" />
 
           {/* Left Prize Drop Chute structure */}
-          <div className="absolute bottom-0 left-0 w-20 h-28 bg-slate-950/90 border-r border-t border-slate-800 rounded-tr-xl flex flex-col justify-end p-2 z-0">
-            <div className="h-full border border-dashed border-pink-500/10 rounded-lg flex items-center justify-center text-[9px] font-bold text-pink-500/40 uppercase tracking-widest text-center">
+          <div className="absolute bottom-0 left-0 w-20 h-28 bg-black/[0.03] dark:bg-white/[0.04] border-r border-t border-black/[0.08] dark:border-white/[0.08] rounded-tr-xl flex flex-col justify-end p-2 z-0">
+            <div className="h-full border border-dashed border-violet-500/30 rounded-lg flex items-center justify-center text-[9px] font-bold text-violet-600/70 dark:text-violet-400/70 uppercase tracking-widest text-center">
               Drop Box
             </div>
           </div>
 
           {/* Draw resting Capsules pile */}
-          {capsules.map((capsule) => (
-            <div
-              key={capsule.id}
-              className="absolute w-8 h-8 rounded-full border border-white/20 shadow-md flex items-center justify-center transform active:scale-110 transition-all select-none hover:brightness-110"
-              style={{
-                left: `${capsule.x - 16}px`,
-                top: `${capsule.y - 16}px`,
-                background: `linear-gradient(135deg, ${capsule.color} 50%, #1e293b 50%)`, // visual split capsules!
-              }}
-            >
-              {/* Inner glowing circle */}
-              <div className="w-2.5 h-2.5 bg-white/20 rounded-full" />
-            </div>
-          ))}
+          {capsules.map((capsule) => {
+            const isDense = choices.length > 40;
+            const sizeStyle = isDense ? { width: '22px', height: '22px' } : { width: '30px', height: '30px' };
+            const offset = isDense ? 11 : 15;
+            return (
+              <div
+                key={capsule.id}
+                className="absolute rounded-full border border-white/60 dark:border-white/20 shadow-xs flex items-center justify-center transform active:scale-110 transition-all select-none hover:brightness-105"
+                style={{
+                  ...sizeStyle,
+                  left: `${capsule.x - offset}px`,
+                  top: `${capsule.y - offset}px`,
+                  background: `linear-gradient(135deg, ${capsule.color} 50%, #ffffff 50%)`,
+                }}
+              >
+                <div className={`${isDense ? 'w-1.5 h-1.5' : 'w-2 h-2'} bg-white/40 rounded-full`} />
+              </div>
+            );
+          })}
 
           {/* Draw Grabbed capsule matching claw movements */}
           {grabbedCapsule && (
             <div
-              className="absolute w-8 h-8 rounded-full border border-white/20 shadow-md flex items-center justify-center transform select-none"
+              className="absolute rounded-full border border-white/60 dark:border-white/20 shadow-md flex items-center justify-center transform select-none"
               style={{
-                left: `${clawX - 16}px`,
-                top: `${clawY + 12}px`, // hangs just below the claw grab base
-                background: `linear-gradient(135deg, ${grabbedCapsule.color} 50%, #1e293b 50%)`,
+                width: choices.length > 40 ? '22px' : '30px',
+                height: choices.length > 40 ? '22px' : '30px',
+                left: `${clawX - (choices.length > 40 ? 11 : 15)}px`,
+                top: `${clawY + 12}px`,
+                background: `linear-gradient(135deg, ${grabbedCapsule.color} 50%, #ffffff 50%)`,
               }}
             >
-              <div className="w-2.5 h-2.5 bg-white/20 rounded-full" />
+              <div className={`${choices.length > 40 ? 'w-1.5 h-1.5' : 'w-2 h-2'} bg-white/40 rounded-full`} />
             </div>
           )}
 
           {/* SVG-based hanging Crane Hook and Cable */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
             {/* The horizontal slide rail at top */}
-            <rect x="20" y="8" width={cabinetWidth - 80} height="6" fill="#1e293b" rx="3" />
+            <rect x="20" y="8" width={cabinetWidth - 80} height="6" fill="#cbd5e1" rx="3" />
             
             {/* Horizontal slider box */}
-            <rect x={clawX - 15} y="4" width="30" height="14" fill="#64748b" rx="4" stroke="#475569" strokeWidth="1" />
+            <rect x={clawX - 15} y="4" width="30" height="14" fill="#94a3b8" rx="4" stroke="#64748b" strokeWidth="1" />
             <circle cx={clawX} cy="11" r="3" fill="#ffffff" />
 
             {/* The cable line hanging down */}
@@ -328,7 +330,7 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
             {/* The solid claw assembly head */}
             <g transform={`translate(${clawX}, ${clawY})`}>
               {/* Claw core housing */}
-              <rect x="-8" y="0" width="16" height="15" fill="#475569" rx="3" stroke="#334155" strokeWidth="1" />
+              <rect x="-8" y="0" width="16" height="15" fill="#64748b" rx="3" stroke="#475569" strokeWidth="1" />
               <circle cx="0" cy="8" r="3" fill="#ef4444" />
 
               {/* Left Claw Prong arm */}
@@ -336,7 +338,7 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
                 <path
                   d="M -6 12 Q -16 22 -6 32"
                   fill="none"
-                  stroke="#94a3b8"
+                  stroke="#64748b"
                   strokeWidth="3.5"
                   strokeLinecap="round"
                 />
@@ -347,7 +349,7 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
                 <path
                   d="M 6 12 Q 16 22 6 32"
                   fill="none"
-                  stroke="#94a3b8"
+                  stroke="#64748b"
                   strokeWidth="3.5"
                   strokeLinecap="round"
                 />
@@ -357,15 +359,15 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
 
           {/* Empty Warning Overlay */}
           {choices.length === 0 && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 text-slate-400 p-6">
-              <span className="text-sm font-semibold mb-1 text-white">Machine Unloaded!</span>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 dark:bg-slate-950/90 text-slate-500 p-6">
+              <span className="text-sm font-semibold mb-1 text-slate-900 dark:text-white">Machine Unloaded!</span>
               <span className="text-xs text-slate-500">Add 2 or more options in the sidebar.</span>
             </div>
           )}
         </div>
 
         {/* Lower Arcade Console Controls layout */}
-        <div className="w-full mt-4 bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex justify-between items-center bg-gradient-to-b from-slate-900 to-slate-950">
+        <div className="w-full mt-4 bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.06] rounded-2xl p-3 flex justify-between items-center shadow-xs">
           
           {/* Simulated Joystick buttons left and right */}
           <div className="flex items-center gap-2">
@@ -376,7 +378,8 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
                 setClawX(stateRef.current.clawX);
                 soundManager.playClawMove();
               }}
-              className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 active:scale-95 disabled:opacity-20 transition-all shadow-md"
+              className="apple-btn-secondary p-2.5 rounded-full disabled:opacity-30 transition-all cursor-pointer hover:border-violet-300 dark:hover:border-violet-700"
+              title="Move claw left"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -387,26 +390,27 @@ export const ClawMachine: React.FC<ClawMachineProps> = ({ choices, onWinner, isF
                 setClawX(stateRef.current.clawX);
                 soundManager.playClawMove();
               }}
-              className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 active:scale-95 disabled:opacity-20 transition-all shadow-md"
+              className="apple-btn-secondary p-2.5 rounded-full disabled:opacity-30 transition-all cursor-pointer hover:border-violet-300 dark:hover:border-violet-700"
+              title="Move claw right"
             >
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Big Neon glowing round trigger button */}
+          {/* Trigger button */}
           <button
             onClick={triggerGrab}
             disabled={active || choices.length < 2}
-            className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white text-xs font-black tracking-widest rounded-full border border-pink-400 shadow-[0_0_15px_rgba(244,63,94,0.4)] active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all"
+            className="apple-btn-primary px-7 py-2.5 rounded-full text-xs font-semibold tracking-wide uppercase disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
           >
-            GRAB
+            {active ? 'Retrieving...' : 'Engage Claw'}
           </button>
         </div>
       </div>
 
       {choices.length < 2 && (
-        <span className="text-xs text-slate-500 font-medium mt-4">
-          Needs at least 2 capsules in the pile to grab!
+        <span className="text-xs text-[#86868b] font-medium mt-4">
+          Needs at least 2 choices in the claw machine
         </span>
       )}
     </div>

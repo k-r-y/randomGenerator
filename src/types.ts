@@ -1,3 +1,5 @@
+export const MAX_CHOICES = 100;
+
 export interface Choice {
   id: string;
   text: string;
@@ -11,3 +13,5 @@ export interface DrawResult {
   generator: string;
   timestamp: number;
 }
+
+export type GeneratorType = 'roulette' | 'duck' | 'slot' | 'plinko' | 'claw';

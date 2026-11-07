@@ -1,15 +1,19 @@
 {
-  "name": "Decidely - Interactive Choice Generators",
-  "short_name": "Decidely",
+  "name": "Kuji - Free Online Random Generator & Decision Maker",
+  "short_name": "Kuji",
+  "description": "Interactive suite of 5 random choice pickers: Wheel of Fortune Spinner, Duck Race Simulator, Slot Machine, Plinko Board, and Claw Machine.",
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0b0f19",
-  "theme_color": "#0b0f19"
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#f8fafc",
+  "categories": ["utilities", "entertainment", "productivity", "games"]
 }
