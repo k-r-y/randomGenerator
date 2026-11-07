@@ -5,7 +5,6 @@ import { MAX_CHOICES } from './types';
 import { ChoiceSidebar } from './components/ChoiceSidebar';
 import { HistoryPanel } from './components/HistoryPanel';
 import { PresetModal } from './components/PresetModal';
-import { LandingPage } from './components/LandingPage';
 import { RouletteWheel } from './generators/RouletteWheel';
 import { JeepneyRace } from './generators/JeepneyRace';
 import { SlotMachine } from './generators/SlotMachine';
@@ -16,11 +15,9 @@ import type { PresetChoice } from './data/presets';
 import confetti from 'canvas-confetti';
 import { 
   Compass, Bus, Dices, Grid3X3, Box, Award, X, Volume2, 
-  VolumeX, Trash2, Sun, Moon, Maximize2, Minimize2, Share2, Check, Copy, RefreshCw, ArrowLeft
+  VolumeX, Trash2, Sun, Moon, Maximize2, Minimize2, Share2, Check, Copy, RefreshCw
 } from 'lucide-react';
 import './App.css';
-
-type ViewMode = 'landing' | 'app';
 
 const HARMONIZED_COLORS = [
   '#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', 
@@ -28,23 +25,6 @@ const HARMONIZED_COLORS = [
 ];
 
 function App() {
-  const [currentView, setCurrentView] = useState<ViewMode>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const hasChoices = params.has('choices');
-        const hasMode = params.has('mode');
-        const hasApp = params.get('view') === 'app' || params.has('app');
-        const hash = window.location.hash.toLowerCase();
-        if (hasChoices || hasMode || hasApp || hash === '#app' || hash === '#generator') {
-          return 'app';
-        }
-      } catch (e) {
-        console.warn("Could not check URL for view mode", e);
-      }
-    }
-    return 'landing';
-  });
   const [choices, setChoices] = useState<Choice[]>(() => {
     // Check URL parameters for custom shared choices
     if (typeof window !== 'undefined') {
@@ -161,34 +141,14 @@ function App() {
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
-      const hasChoices = params.has('choices');
-      const hasMode = params.has('mode');
-      const hasApp = params.get('view') === 'app' || params.has('app');
-      const hash = window.location.hash.toLowerCase();
-      if (hasChoices || hasMode || hasApp || hash === '#app' || hash === '#generator') {
-        setCurrentView('app');
-      } else {
-        setCurrentView('landing');
+      const urlMode = params.get('mode') as GeneratorType;
+      if (urlMode && ['roulette', 'duck', 'slot', 'plinko', 'claw'].includes(urlMode)) {
+        setActiveTab(urlMode);
       }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
-
-  const navigateToApp = (mode?: GeneratorType) => {
-    if (mode) {
-      setActiveTab(mode);
-    }
-    setCurrentView('app');
-    window.history.pushState(null, '', mode ? `?mode=${mode}#app` : '#app');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const navigateToLanding = () => {
-    setCurrentView('landing');
-    window.history.pushState(null, '', window.location.pathname);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   const handleWinner = (drawWinner: Choice) => {
     soundManager.playWin();
@@ -337,34 +297,6 @@ function App() {
     </div>
   );
 
-  if (currentView === 'landing') {
-    return (
-      <>
-        <LandingPage
-          onLaunchGenerator={navigateToApp}
-          onOpenPresets={() => setIsPresetModalOpen(true)}
-          isLightMode={isLightMode}
-          onToggleTheme={() => {
-            setIsLightMode(!isLightMode);
-            soundManager.playTick(600, 0.08);
-          }}
-        />
-
-        {/* Preset Library Modal */}
-        <PresetModal
-          isOpen={isPresetModalOpen}
-          onClose={() => setIsPresetModalOpen(false)}
-          onSelectPreset={(presetItems) => {
-            handleSelectPreset(presetItems);
-            setIsPresetModalOpen(false);
-            navigateToApp();
-          }}
-          currentChoices={choices}
-        />
-      </>
-    );
-  }
-
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-white flex flex-col font-sans transition-colors bg-mesh-pattern">
       {/* 1. Ambient lighting glow */}
@@ -374,30 +306,14 @@ function App() {
       <header className={`sticky top-0 z-30 apple-glass-nav border-b border-black/[0.06] dark:border-white/[0.08] px-4 sm:px-8 py-2.5 flex items-center justify-between shrink-0 ${
         isFullscreen ? 'hidden' : ''
       }`}>
-        {/* Brand identity & Back Navigation */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={navigateToLanding}
-            className="apple-btn-secondary px-3 py-1.5 text-xs font-medium rounded-full flex items-center gap-1.5 cursor-pointer"
-            title="Return to Overview"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Overview</span>
-          </button>
-
-          <div className="h-4 w-px bg-black/[0.08] dark:bg-white/[0.12] hidden sm:block" />
-
-          <div 
-            onClick={navigateToLanding}
-            className="flex items-center gap-2 cursor-pointer group select-none"
-          >
-            <span className="text-[17px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">
-              Decidely
-            </span>
-            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.08] text-[#86868b]">
-              Studio
-            </span>
-          </div>
+        {/* Brand identity */}
+        <div className="flex items-center gap-2.5 select-none">
+          <span className="text-[17px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">
+            Decidely
+          </span>
+          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.08] text-[#86868b]">
+            Studio
+          </span>
         </div>
 
         {/* Right Header Controls */}
